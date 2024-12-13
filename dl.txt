@@ -1,0 +1,1 @@
+yt-dlp --all-subs https://www.youtube.com/watch?v=GmrH691SEoA
