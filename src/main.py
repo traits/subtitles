@@ -5,9 +5,17 @@ from pathlib import Path
 import cv2
 
 
+def get_git_root() -> Path:
+    root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
+    if not root:
+        raise OSError(2, "file not found (no git root detected)")
+    s = root.decode("utf-8").strip()
+    return Path(s)
+
+
 def get_video_dimensions(mkv_file):
     width = height = -1
-    vcap = cv2.VideoCapture(mkv_file)
+    vcap = cv2.VideoCapture(mkv_file.as_posix())
     if vcap.isOpened():
         width = vcap.get(cv2.CAP_PROP_FRAME_WIDTH)  # float `width`
         height = vcap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float `height`
@@ -29,17 +37,9 @@ def get_roi(vdim: tuple):
     return (x_begin, x_end), (y_begin, y_end)
 
 
-def extract_subtitles(mkv_file):
-    # Create the output directory if it doesn't exist
-    odir = Path("_subtitles")
-    odir.mkdir(parents=True, exist_ok=True)
-    odir_frames = odir / "frames"
-    odir_frames.mkdir(parents=True, exist_ok=True)
-    odir_rois = odir / "rois"
-    odir_rois.mkdir(parents=True, exist_ok=True)
-
+def extract_roi_images(mkv_file):
     # Extract video frames using ffmpeg
-    subprocess.run(["ffmpeg", "-i", mkv_file, "-vf", "fps=1", str(odir_frames / "%05d.png")], check=True)
+    subprocess.run(["ffmpeg", "-i", mkv_file.as_posix(), "-vf", "fps=1", str(odir_frames / "%05d.png")], check=True)
 
     # Calculate the number of .png files in the output directory
     frames = sorted(list(odir_frames.glob("*.png")))
@@ -82,5 +82,16 @@ def extract_subtitles(mkv_file):
 
 
 if __name__ == "__main__":
-    mkv_file = "data/AiO.mkv"  # Replace with your MKV file path
-    extract_subtitles(mkv_file)
+    root = get_git_root()
+
+    mkv_file = root / "data" / "AiO.mkv"  # Replace with your MKV file path
+
+    odir = root / "_output"
+    odir_frames = odir / "frames"
+    odir_rois = odir / "rois"
+
+    odir.mkdir(parents=True, exist_ok=True)
+    odir_frames.mkdir(parents=True, exist_ok=True)
+    odir_rois.mkdir(parents=True, exist_ok=True)
+
+    extract_roi_images(mkv_file)
