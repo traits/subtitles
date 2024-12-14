@@ -1,0 +1,10 @@
+/*.mkv
+/.venv
+.aider*
+.env
+/_ai/.aider
+/_output
+__pycache__
+/data/AiO.mkv
+/.vscode
+/_subtitles
