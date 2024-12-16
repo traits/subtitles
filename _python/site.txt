@@ -1,3 +1,15 @@
 -r base.txt
+--extra-index-url https://download.pytorch.org/whl/cu124/
+torch 
+torchvision
+torchmetrics
+transformers
+
+qwen_vl_utils
+accelerate
+
+# deepseek_vl @ git+https://github.com/deepseek-ai/DeepSeek-VL2
+# flash-attn
 
 opencv-python
+# requests
