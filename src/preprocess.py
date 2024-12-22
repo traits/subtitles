@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -24,7 +25,7 @@ def print_loop_state(i, loop_size, occ):
         print(f"({i}/{loop_size})")
 
 
-def print_loop_state_with_modulo(i, loop_size, occ):
+def print_loop_state_modulo(i, loop_size, occ):
     """
     Prints the current loop state as (i/loop_size) whenever i modulo occ is zero,
     and always prints the last iteration.
@@ -88,11 +89,114 @@ class PreProcessor:
 
         return (x_begin, x_end), (y_begin, y_end)
 
-    def extract_roi_images(self, fps=1):
+    def runFFMPEG(self, fps, log_file):
         # Extract video frames using ffmpeg
-        subprocess.run(
-            ["ffmpeg", "-i", self.mkv_file.as_posix(), "-vf", f"fps={fps}", str(self.odir_frames / "%05d.png")], check=True
+        command = [
+            "ffmpeg",
+            "-loglevel",
+            "debug",
+            "-i",
+            self.mkv_file.as_posix(),
+            "-vf",
+            f"fps={fps}",
+            "-fps_mode",
+            "auto",
+            "-frame_pts",
+            "1",
+            str(self.odir_frames / "%05d.png"),
+        ]
+
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True,
         )
+        ffmpeg_log = result.stderr
+        with open(log_file, "w") as f:
+            f.write(ffmpeg_log)
+
+    def convertFFMPEGLog(self, log_file) -> list:
+        # Regular expression to match the desired log entries
+        log_pattern = re.compile(r"\[Parsed_fps_\d+ @ [0-9a-fA-F]+] (Read frame .*|Dropping frame .*|Writing frame .*)")
+
+        # Regular expression to extract PTS values
+        pts_pattern = re.compile(r"in pts (\d+), out pts (\d+)|with pts (\d+)")
+
+        # List to store the extracted log entries
+        result = []
+
+        # Counter for 'read' frames
+        read_frame_counter = 0
+
+        # Read the log file and extract matching lines
+        with open(log_file, "r") as f:
+            for line in f:
+                match = log_pattern.match(line)
+                if match:
+                    entry = match.group(1)
+                    # Determine the type
+                    if entry.startswith("Read frame"):
+                        entry_type = "read"
+                    elif entry.startswith("Dropping frame"):
+                        entry_type = "drop"
+                    elif entry.startswith("Writing frame"):
+                        entry_type = "write"
+                    else:
+                        continue  # Skip if the type is not recognized
+
+                    # Extract PTS values
+                    pts_match = pts_pattern.search(entry)
+                    if pts_match:
+                        if pts_match.group(1) and pts_match.group(2):
+                            in_pts = int(pts_match.group(1))
+                            out_pts = int(pts_match.group(2))
+                        elif pts_match.group(3):
+                            in_pts = int(pts_match.group(3))
+                            out_pts = None  # No out PTS in this case
+                        else:
+                            continue  # Skip if no PTS values are found
+
+                        # Create a dictionary entry with the updated keys and frame index
+                        entry_dict = {"type": entry_type, "in_pts": in_pts, "out_pts": out_pts}
+
+                        # Add 'frame' only for 'read' entries
+                        if entry_type == "read":
+                            entry_dict["frame"] = read_frame_counter
+                            read_frame_counter += 1  # Increment the frame counter
+
+                        result.append(entry_dict)
+        return result
+
+    def filterFrameInfo(self, data, output_file):
+        result = []
+        last_i = len(data) - 1
+        i = 0
+        while i <= last_i:
+            if i < last_i:
+                v = data[i]
+                n = data[i + 1]
+                if v["type"] == "read" and n["type"] == "drop":
+                    if v["out_pts"] == n["in_pts"]:
+                        i += 2
+                        continue
+                else:
+                    result.append(v)
+            i += 1
+
+        # result = [{"frame": v["frame"], "in_pts": v["in_pts"], "out_pts": v["out_pts"]} for v in result if v["type"] == "read"]
+        # better: this line uses the fact, that out_pts == list index for the new list
+        result = [{"frame": v["frame"], "in_pts": v["in_pts"]} for v in result if v["type"] == "read"]
+        # Save the extracted entries as a JSON list
+        with open(output_file, "w") as f:
+            json.dump(result, f, indent=2)
+
+    def extract_roi_images(self, fps=1):
+        log_file = self.odir / "ffmpeg.log"
+        self.runFFMPEG(fps, log_file)
+        frames = self.convertFFMPEGLog(log_file)
+        fi_file = self.odir / "frame_info.json"
+        self.filterFrameInfo(frames, fi_file)
 
         # Calculate the number of .png files in the output directory
         frames = sorted(list(self.odir_frames.glob("*.png")))
@@ -100,16 +204,14 @@ class PreProcessor:
         print(f"Number of frames to process: {num_frames}")
 
         # Process each frame to detect and extract subtitles
-        subtitles = []
-        frame_count = 1
+        frame_idx = 0
         frame_size = self.get_video_dimensions()
         print(f"{frame_size=}")
         roi_x, roi_y = self.get_roi(frame_size)
         print(f"{roi_x=} {roi_y=}")
 
         for i, frame_path in enumerate(frames):
-            print_loop_state(i, num_frames, 100)
-            # print_loop_state_with_modulo(i, num_frames, 100)
+            print_loop_state_modulo(i, num_frames, 100)
 
             img = cv2.imread(str(frame_path))
             gray = img  # cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -125,14 +227,7 @@ class PreProcessor:
             subtitle_gray = gray[roi_y_cv[0] : roi_y_cv[1], roi_x[0] : roi_x[1]]
 
             # Save the cropped subtitle image
-            subtitle_path = self.odir_rois / f"{frame_count:05d}.png"
+            subtitle_path = self.odir_rois / f"{frame_idx:05d}.png"
             cv2.imwrite(str(subtitle_path), subtitle_gray)
 
-            # Store the timestamp and associated image path
-            subtitles.append({"timestamp": f"{frame_count:05d}", "image": subtitle_path.name})
-
-            frame_count += 1
-
-        # Write the timestamps and associated image paths to a JSON file
-        with open(self.odir / "subtitles.json", "w") as json_file:
-            json.dump(subtitles, json_file, indent=4)
+            frame_idx += 1

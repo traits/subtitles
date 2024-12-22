@@ -9,7 +9,9 @@ qwen_vl_utils
 accelerate
 
 # deepseek_vl @ git+https://github.com/deepseek-ai/DeepSeek-VL2
-# flash-attn
+#flash-attn --global-option="--no-build-isolation"
+#packaging
+#ninja
 
 opencv-python
 # requests

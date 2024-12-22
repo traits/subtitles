@@ -1,5 +1,6 @@
 import os
 
+import torch
 from qwen_vl_utils import process_vision_info
 from transformers import AutoProcessor, AutoTokenizer, Qwen2VLForConditionalGeneration
 
@@ -26,8 +27,8 @@ class Analyzer:
 
         # The default range for the number of visual tokens per image in the model is 4-16384. You can set min_pixels and max_pixels according to your needs, such as a token count range of 256-1280, to balance speed and memory usage.
         min_pixels = 256 * 28 * 28
-        max_pixels = 1280 * 28 * 28
-        processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct", min_pixels=min_pixels, max_pixels=max_pixels)
+        max_pixels = 4 * 1280 * 28 * 28
+        processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-7B-Instruct", min_pixels=min_pixels, max_pixels=max_pixels)
 
         messages = [
             {
@@ -35,11 +36,11 @@ class Analyzer:
                 "content": [
                     {
                         "type": "image",
-                        "image": "v:/projects/biovits/subtitles/data/06773.png",
+                        "image": "v:/projects/biovits/subtitles/_output/rois/07191.png",
                     },
                     {
                         "type": "text",
-                        "text": "Return original indonesian and chinese sentences and their respective english translations.",
+                        "text": "Find all rows of text. Every such row is written either in Indonesian or Simplified Chinese. Return all rows including their English translation and the name of the original language as pure json. Skip any explanations or other additions in your answer.",
                     },
                 ],
             }
