@@ -1,0 +1,3 @@
+{
+  "single": "Find all rows of text in Simplified Chinese and skip all other rows. Return a valid json object with the original text (key == 'chinese') and the English Translation (key == 'english'). If no text is found return empty strings as values."
+}

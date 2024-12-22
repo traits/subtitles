@@ -5,6 +5,8 @@ from pathlib import Path
 
 import cv2
 
+from settings import Settings
+
 
 def print_loop_state(i, loop_size, occ):
     """
@@ -44,28 +46,14 @@ def print_loop_state_modulo(i, loop_size, occ):
 
 class PreProcessor:
     def __init__(self):
-
-        root = self.get_git_root()
-
-        self.mkv_file = root / "data" / "AiO.mkv"  # Replace with your MKV file path
-
-        self.odir = root / "_output"
-        self.odir_frames = self.odir / "frames"
-        self.odir_rois = self.odir / "rois"
-
-        self.odir.mkdir(parents=True, exist_ok=True)
-        self.odir_frames.mkdir(parents=True, exist_ok=True)
-        self.odir_rois.mkdir(parents=True, exist_ok=True)
+        self.settings = Settings()
+        self.mkv_file = self.settings.mkv_file
+        self.odir = self.settings.odir
+        self.odir_frames = self.settings.odir_frames
+        self.odir_rois = self.settings.odir_rois
 
     def run(self):
         self.extract_roi_images(10)
-
-    def get_git_root(self) -> Path:
-        root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
-        if not root:
-            raise OSError(2, "file not found (no git root detected)")
-        s = root.decode("utf-8").strip()
-        return Path(s)
 
     def get_video_dimensions(self):
         width = height = -1
