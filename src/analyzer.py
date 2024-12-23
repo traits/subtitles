@@ -40,6 +40,9 @@ class Analyzer:
         # max_pixels = 4 * 1280 * 28 * 28
         # processor = AutoProcessor.from_pretrained(model_name, min_pixels=min_pixels, max_pixels=max_pixels)
 
+        if self.out_file.exists():
+            self.out_file.unlink()
+
         images = sorted(list(self.roi_dir.glob("*.png")))
         num_images = len(images)
 
