@@ -43,46 +43,47 @@ class Analyzer:
         images = sorted(list(self.roi_dir.glob("*.png")))
         num_images = len(images)
 
-        # images = ["02904.png", "02918.png"]
-        files = [item.as_posix() for item in images]
-        prompt = self.prompts["multiple"]
+        for i in range(0, num_images, 25):
+            partition = images[i:i + 25]
+            files = [item.as_posix() for item in partition]
+            prompt = self.prompts["multiple"]
 
-        content = [{"type": "image", "image": img} for img in files]
-        content.append(
-            {
-                "type": "text",
-                "text": prompt,
-            }
-        )
+            content = [{"type": "image", "image": img} for img in files]
+            content.append(
+                {
+                    "type": "text",
+                    "text": prompt,
+                }
+            )
 
-        messages = [
-            {
-                "role": "user",
-                "content": content,
-            }
-        ]
+            messages = [
+                {
+                    "role": "user",
+                    "content": content,
+                }
+            ]
 
-        # Preparation for inference
-        text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        image_inputs, video_inputs = process_vision_info(messages)
-        inputs = processor(
-            text=[text],
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
-            return_tensors="pt",
-        )
-        inputs = inputs.to("cuda")
+            # Preparation for inference
+            text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            image_inputs, video_inputs = process_vision_info(messages)
+            inputs = processor(
+                text=[text],
+                images=image_inputs,
+                videos=video_inputs,
+                padding=True,
+                return_tensors="pt",
+            )
+            inputs = inputs.to("cuda")
 
-        # Inference: Generation of the output
-        generated_ids = model.generate(**inputs, max_new_tokens=128)
-        generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
-        output_text = processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+            # Inference: Generation of the output
+            generated_ids = model.generate(**inputs, max_new_tokens=128)
+            generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+            output_text = processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
 
-        cleaned_text = output_text[0].strip("`").replace("json", "").strip()
-        cleaned_text = cleaned_text.replace("\\n", "\n").replace('\\"', '"')
+            cleaned_text = output_text[0].strip("`").replace("json", "").strip()
+            cleaned_text = cleaned_text.replace("\\n", "\n").replace('\\"', '"')
 
-        # Parse the cleaned text as JSON
-        valid_json = json.loads(cleaned_text)
-        with open(self.out_file, "w", encoding="utf-8") as f:
-            json.dump(valid_json, f, ensure_ascii=False, indent=2)
+            # Parse the cleaned text as JSON
+            valid_json = json.loads(cleaned_text)
+            with open(self.out_file, "a", encoding="utf-8") as f:
+                json.dump(valid_json, f, ensure_ascii=False, indent=2)
