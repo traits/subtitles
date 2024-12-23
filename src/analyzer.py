@@ -90,3 +90,5 @@ class Analyzer:
             valid_json = json.loads(cleaned_text)
             with open(self.out_file, "a", encoding="utf-8") as f:
                 json.dump(valid_json, f, ensure_ascii=False, indent=2)
+
+            print(f"Processed partition {i // 25 + 1}/{num_images // 25 + 1}")
