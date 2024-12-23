@@ -1,4 +1,4 @@
 {
-  "single": "Find all rows of text in Simplified Chinese and skip all other rows. Return a valid json object with the original text (key == 'chinese') and the English Translation (key == 'english'). If no text is found return empty strings as values",
-  "multiple": "For every image find all rows of text in Simplified Chinese and skip all other rows. Return a list of valid json objects with the respective images original text (key == 'chinese') and the English Translation (key == 'english'). If no text is found return empty strings as values."
+  "single": "Find all rows of text in Simplified Chinese and skip all other rows. Return only a unique valid json object with the original text (key == 'chinese') and the English Translation (key == 'english'). If no text is found return empty strings as values in the object. Don't return anything else.",
+  "multiple": "For every input image find all rows of text in Simplified Chinese and skip all other rows. Return the found information in a single Json object for every image and add the object to a json list. Every json object shall contain the images original text (key == 'chinese') and the English Translation (key == 'english'). If no text is found put empty strings in the objects values. Every image shall return exactly one  chinese/english object"
 }

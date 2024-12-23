@@ -45,13 +45,13 @@ class Analyzer:
 
         images = sorted(list(self.roi_dir.glob("*.png")))
         num_images = len(images)
-        chunk_size = 10
+        chunk_size = 1
         result = []
 
         for i in range(0, num_images, chunk_size):
             partition = images[i : i + chunk_size]
             files = [item.as_posix() for item in partition]
-            prompt = self.prompts["multiple"]
+            prompt = self.prompts["single"]
 
             content = [{"type": "image", "image": img} for img in files]
             content.append(
@@ -85,10 +85,9 @@ class Analyzer:
             generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
             output_text = processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
 
-            print(f"  {output_text[0]=}")
+            # print(f"  {output_text[0]=}")
             cleaned_text = output_text[0].strip("`").replace("json", "").strip()
             cleaned_text = cleaned_text.replace("\\n", "\n").replace('\\"', '"')
-            print(f"  {cleaned_text=}")
 
             # Parse the cleaned text as JSON
             try:
@@ -97,7 +96,7 @@ class Analyzer:
                 valid_json = None
             result.append(valid_json)
 
-            print(f"Processed partition {i // chunk_size + 1}/{num_images // chunk_size + 1}")
+            print(f"{i // chunk_size + 1}/{num_images // chunk_size + 1}: {cleaned_text}")
 
         with open(self.out_file, "a", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
