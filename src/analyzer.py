@@ -17,7 +17,7 @@ class Analyzer:
         self.prompts = self.settings.root / "data" / "prompts.json"
         with open(self.settings.root / "data" / "prompts.json", "r") as f:
             self.prompts = json.load(f)
-        self.out_file = self.settings.odir / "subtitles.json"
+        self.subtitle_file = self.settings.odir / "subtitles.json"
 
     def run(self):
         model_name = "Qwen/Qwen2-VL-7B-Instruct"
@@ -40,8 +40,8 @@ class Analyzer:
         # max_pixels = 4 * 1280 * 28 * 28
         # processor = AutoProcessor.from_pretrained(model_name, min_pixels=min_pixels, max_pixels=max_pixels)
 
-        if self.out_file.exists():
-            self.out_file.unlink()
+        if self.subtitle_file.exists():
+            self.subtitle_file.unlink()
 
         images = sorted(list(self.roi_dir.glob("*.png")))
         num_images = len(images)
@@ -98,5 +98,5 @@ class Analyzer:
 
             print(f"{i // chunk_size + 1}/{num_images // chunk_size + 1}: {cleaned_text}")
 
-        with open(self.out_file, "a", encoding="utf-8") as f:
+        with open(self.subtitle_file, "a", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)

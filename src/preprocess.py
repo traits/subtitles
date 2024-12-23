@@ -164,7 +164,7 @@ class PreProcessor:
             if i < last_i:
                 v = data[i]
                 n = data[i + 1]
-                if v["type"] == "read" and n["type"] == "drop":
+                if v["type"] == "read" and n["type"] != "write":
                     if v["out_pts"] == n["in_pts"]:
                         i += 2
                         continue
