@@ -91,7 +91,10 @@ class Analyzer:
             print(f"  {cleaned_text=}")
 
             # Parse the cleaned text as JSON
-            valid_json = json.loads(cleaned_text)
+            try:
+                valid_json = json.loads(cleaned_text)
+            except json.JSONDecodeError:
+                valid_json = None
             result.append(valid_json)
 
             print(f"Processed partition {i // chunk_size + 1}/{num_images // chunk_size + 1}")
