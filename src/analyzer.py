@@ -40,22 +40,25 @@ class Analyzer:
         # max_pixels = 4 * 1280 * 28 * 28
         # processor = AutoProcessor.from_pretrained(model_name, min_pixels=min_pixels, max_pixels=max_pixels)
 
-        file = Path(self.roi_dir / "02918.png").as_posix()
-        prompt = self.prompts["single"]
+        images = sorted(list(self.roi_dir.glob("*.png")))
+        num_images = len(images)
+
+        # images = ["02904.png", "02918.png"]
+        files = [item.as_posix() for item in images]
+        prompt = self.prompts["multiple"]
+
+        content = [{"type": "image", "image": img} for img in files]
+        content.append(
+            {
+                "type": "text",
+                "text": prompt,
+            }
+        )
 
         messages = [
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "image": file,
-                    },
-                    {
-                        "type": "text",
-                        "text": prompt,
-                    },
-                ],
+                "content": content,
             }
         ]
 
