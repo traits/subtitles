@@ -5,8 +5,6 @@ from pathlib import Path
 
 import cv2
 
-from settings import Settings
-
 
 def print_loop_state(i, loop_size, occ):
     """
@@ -45,8 +43,9 @@ def print_loop_state_modulo(i, loop_size, occ):
 
 
 class PreProcessor:
-    def __init__(self):
-        self.settings = Settings()
+
+    def __init__(self, settings):
+        self.settings = settings
         self.mkv_file = self.settings.mkv_file
         self.odir = self.settings.odir
         self.odir_frames = self.settings.odir_frames

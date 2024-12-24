@@ -13,5 +13,7 @@ accelerate
 #packaging
 #ninja
 
+thefuzz
+
 opencv-python
 # requests

@@ -6,13 +6,11 @@ from pathlib import Path
 from qwen_vl_utils import process_vision_info
 from transformers import AutoProcessor, AutoTokenizer, Qwen2VLForConditionalGeneration
 
-from settings import Settings
-
 
 class Analyzer:
 
-    def __init__(self):
-        self.settings = Settings()
+    def __init__(self, settings):
+        self.settings = settings
         self.roi_dir = self.settings.odir_rois
         self.prompts = self.settings.root / "data" / "prompts.json"
         with open(self.settings.root / "data" / "prompts.json", "r") as f:
