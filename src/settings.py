@@ -3,15 +3,21 @@ from pathlib import Path
 
 
 class Settings:
-    def __init__(self):
+
+    def __init__(self, video_file):
 
         self.root = self._get_git_root()
+        self.data_dir = self.root / "data"
 
-        self.mkv_file = self.root / "data" / "AiO.mkv"  # Replace with your MKV file path
+        self.video_file = self.data_dir / video_file
 
-        self.odir = self.root / "_output"
+        self.odir = self.root / "_output" / self.video_file.stem
         self.odir_frames = self.odir / "frames"
         self.odir_rois = self.odir / "rois"
+
+        self.log_file = self.odir / "ffmpeg.log"  # ffmpeg log file (loglevel 'debug') (Preprocessor)
+        self.log_frame_info = self.odir / "frame_info.json"  # frame number and pts, parsed from log file (Preprocessor)
+        self.ocr_result = self.odir / "ocr_result.json"  # result of vllm inference (Analyzer)
 
         self.odir.mkdir(parents=True, exist_ok=True)
         self.odir_frames.mkdir(parents=True, exist_ok=True)

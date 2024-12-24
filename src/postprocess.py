@@ -1,17 +1,19 @@
 import json
 from pathlib import Path
 
+from settings import Settings
+
 
 class PostProcessor:
 
-    def __init__(self, settings):
+    def __init__(self, settings: Settings):
         self.settings = settings
-        self.mkv_file = self.settings.mkv_file
+        self.video_file = self.settings.video_file
         self.odir = self.settings.odir
-        self.subtitles_file = self.odir / "subtitles.json"
-        self.frameinfo_file = self.odir / "frame_info.json"
+        self.ocr_result = self.settings.ocr_result
+        self.frameinfo_file = self.settings.log_frame_info
         self.info_file = self.odir / "info.json"
-        self.sub_file = self.odir / self.mkv_file.with_suffix(".sub")
+        self.sub_file = self.odir / f"{self.video_file.stem}.sub"
 
     def run(self):
         result = self.mergeSubTitleInfo()
@@ -20,7 +22,7 @@ class PostProcessor:
         self.writeSubFile()
 
     def mergeSubTitleInfo(self) -> list:
-        with open(self.subtitles_file, "r", encoding="utf8") as f:
+        with open(self.ocr_result, "r", encoding="utf8") as f:
             sinfo = json.load(f)
         with open(self.frameinfo_file, "r") as f:
             finfo = json.load(f)

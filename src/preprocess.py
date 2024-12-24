@@ -5,6 +5,8 @@ from pathlib import Path
 
 import cv2
 
+from settings import Settings
+
 
 def print_loop_state(i, loop_size, occ):
     """
@@ -44,19 +46,22 @@ def print_loop_state_modulo(i, loop_size, occ):
 
 class PreProcessor:
 
-    def __init__(self, settings):
+    def __init__(self, settings: Settings):
         self.settings = settings
-        self.mkv_file = self.settings.mkv_file
-        self.odir = self.settings.odir
+        self.video_file = self.settings.video_file
+
         self.odir_frames = self.settings.odir_frames
         self.odir_rois = self.settings.odir_rois
+
+        self.log_file = self.settings.log_file
+        self.frame_info_file = self.settings.log_frame_info
 
     def run(self):
         self.extract_roi_images(10)
 
     def get_video_dimensions(self):
         width = height = -1
-        vcap = cv2.VideoCapture(self.mkv_file.as_posix())
+        vcap = cv2.VideoCapture(self.video_file.as_posix())
         if vcap.isOpened():
             width = vcap.get(cv2.CAP_PROP_FRAME_WIDTH)  # float `width`
             height = vcap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float `height`
@@ -76,14 +81,14 @@ class PreProcessor:
 
         return (x_begin, x_end), (y_begin, y_end)
 
-    def runFFMPEG(self, fps, log_file):
+    def runFFMPEG(self, fps):
         # Extract video frames using ffmpeg
         command = [
             "ffmpeg",
             "-loglevel",
             "debug",
             "-i",
-            self.mkv_file.as_posix(),
+            self.video_file.as_posix(),
             "-vf",
             f"fps={fps}",
             "-fps_mode",
@@ -100,10 +105,10 @@ class PreProcessor:
             text=True,
         )
         ffmpeg_log = result.stderr
-        with open(log_file, "w") as f:
+        with open(self.log_file, "w") as f:
             f.write(ffmpeg_log)
 
-    def convertFFMPEGLog(self, log_file) -> list:
+    def convertFFMPEGLog(self) -> list:
         # Regular expression to match the desired log entries
         log_pattern = re.compile(r"\[Parsed_fps_\d+ @ [0-9a-fA-F]+] (Read frame .*|Dropping frame .*|Writing frame .*)")
 
@@ -117,7 +122,7 @@ class PreProcessor:
         read_frame_counter = 0
 
         # Read the log file and extract matching lines
-        with open(log_file, "r") as f:
+        with open(self.log_file, "r") as f:
             for line in f:
                 match = log_pattern.match(line)
                 if match:
@@ -155,7 +160,7 @@ class PreProcessor:
                         result.append(entry_dict)
         return result
 
-    def filterFrameInfo(self, data, output_file):
+    def filterFrameInfo(self, data):
         result = []
         last_i = len(data) - 1
         i = 0
@@ -175,15 +180,13 @@ class PreProcessor:
         # better: this line uses the fact, that out_pts == list index for the new list
         result = [{"frame": v["frame"], "in_pts": v["in_pts"]} for v in result if v["type"] == "read"]
         # Save the extracted entries as a JSON list
-        with open(output_file, "w") as f:
+        with open(self.frame_info_file, "w") as f:
             json.dump(result, f, indent=2)
 
     def extract_roi_images(self, fps=1):
-        log_file = self.odir / "ffmpeg.log"
-        self.runFFMPEG(fps, log_file)
-        frames = self.convertFFMPEGLog(log_file)
-        fi_file = self.odir / "frame_info.json"
-        self.filterFrameInfo(frames, fi_file)
+        self.runFFMPEG(fps)
+        frame_info = self.convertFFMPEGLog()
+        self.filterFrameInfo(frame_info)
 
         # Calculate the number of .png files in the output directory
         frames = sorted(list(self.odir_frames.glob("*.png")))
