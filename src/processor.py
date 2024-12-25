@@ -8,7 +8,7 @@ from settings import Settings
 
 class Processor:
     def __init__(self):
-        self._settings = Settings("AiO-ep19.mkv")  # expected in "<GITROOT>/data" dir
+        self._settings = Settings("AiO-ep21.mkv")  # expected in "<GITROOT>/data" dir
 
     def run(self):
         # preprocess = PreProcessor(self._settings)

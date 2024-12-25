@@ -96,7 +96,7 @@ class Analyzer:
                 valid_json = None
             result.append(valid_json)
 
-            print(f"{i // chunk_size + 1}/{num_images // chunk_size + 1}: {cleaned_text}")
+            print(f"{i // chunk_size + 1}/{num_images // chunk_size}: {cleaned_text}")
 
         with open(self.ocr_result, "a", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)

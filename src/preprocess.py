@@ -1,6 +1,7 @@
 import json
 import re
 import subprocess
+from collections import deque
 from pathlib import Path
 
 import cv2
@@ -57,7 +58,7 @@ class PreProcessor:
         self.frame_info_file = self.settings.log_frame_info
 
     def run(self):
-        self.extract_roi_images(10)
+        self.extract_roi_images(5)
 
     def get_video_dimensions(self):
         width = height = -1
@@ -160,55 +161,62 @@ class PreProcessor:
                         result.append(entry_dict)
         return result
 
-    def filterFrameInfo(self, data):
+    def filterFrameInfo(self, data) -> int:
         result = []
-        last_i = len(data) - 1
-        i = 0
-        while i <= last_i:
-            if i < last_i:
-                v = data[i]
-                n = data[i + 1]
-                if v["type"] == "read" and n["type"] != "write":
-                    if v["out_pts"] == n["in_pts"]:
-                        i += 2
-                        continue
-                else:
-                    result.append(v)
-            i += 1
+        read_stacks = {}
 
-        # result = [{"frame": v["frame"], "in_pts": v["in_pts"], "out_pts": v["out_pts"]} for v in result if v["type"] == "read"]
-        # better: this line uses the fact, that out_pts == list index for the new list
-        result = [{"frame": v["frame"], "in_pts": v["in_pts"]} for v in result if v["type"] == "read"]
+        for v in data:
+            if v["type"] == "read":
+                key = str(v["out_pts"])
+                if read_stacks.get(key) == None:
+                    read_stacks[key] = deque()
+                read_stacks[key].append(v)
+            elif v["type"] == "drop":
+                key = str(v["in_pts"])
+                stack = read_stacks.get(key)
+                if stack:
+                    stack.pop()
+            else:  # write
+                key = str(v["in_pts"])
+                top_read = read_stacks.get(key).pop()
+                e = {"frame": top_read["frame"], "in_pts": top_read["in_pts"]}
+                result.append(e)
+
         # Save the extracted entries as a JSON list
         with open(self.frame_info_file, "w") as f:
             json.dump(result, f, indent=2)
+        return len(result)
 
     def extract_roi_images(self, fps=1):
         self.runFFMPEG(fps)
         frame_info = self.convertFFMPEGLog()
-        self.filterFrameInfo(frame_info)
+        num_frames = self.filterFrameInfo(frame_info)
 
         # Calculate the number of .png files in the output directory
-        frames = sorted(list(self.odir_frames.glob("*.png")))
-        num_frames = len(frames)
-        print(f"Number of frames to process: {num_frames}")
+        images = sorted(list(self.odir_frames.glob("*.png")))
+        num_images = len(images)
+
+        if_ratio = f"{num_images}/{num_frames}"
+        print(f"Number of created images vs calculated frames from ffmpeg log: {if_ratio}")
+        if num_frames != num_images:
+            raise ValueError(f"Image/frame mismatch: {if_ratio}")
 
         # Process each frame to detect and extract subtitles
-        frame_idx = 0
-        frame_size = self.get_video_dimensions()
-        print(f"{frame_size=}")
-        roi_x, roi_y = self.get_roi(frame_size)
+        img_idx = 0
+        img_size = self.get_video_dimensions()
+        print(f"{img_size=}")
+        roi_x, roi_y = self.get_roi(img_size)
         print(f"{roi_x=} {roi_y=}")
 
-        for i, frame_path in enumerate(frames):
-            print_loop_state_modulo(i, num_frames, 100)
+        for i, frame_path in enumerate(images):
+            print_loop_state_modulo(i, num_images, 100)
 
             img = cv2.imread(str(frame_path))
             gray = img  # cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
             # Video dimensions
             # height, width = gray.shape
-            height = frame_size[1]
+            height = img_size[1]
 
             # y range in opencv coordinates:
             roi_y_cv = (height - roi_y[1], height - roi_y[0])
@@ -217,7 +225,7 @@ class PreProcessor:
             subtitle_gray = gray[roi_y_cv[0] : roi_y_cv[1], roi_x[0] : roi_x[1]]
 
             # Save the cropped subtitle image
-            subtitle_path = self.odir_rois / f"{frame_idx:05d}.png"
+            subtitle_path = self.odir_rois / f"{img_idx:05d}.png"
             cv2.imwrite(str(subtitle_path), subtitle_gray)
 
-            frame_idx += 1
+            img_idx += 1
