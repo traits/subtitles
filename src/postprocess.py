@@ -25,6 +25,7 @@ class PostProcessor:
 
     def run(self):
         self.writeSubFile()
+        self.writeAudioSubFile()
 
     def mergeSubTitleInfo(self) -> list:
         with open(self.ocr_result, "r", encoding="utf8") as f:
@@ -66,3 +67,22 @@ class PostProcessor:
                             f.write(f"{{{v['frame']}}}{{{info[i+1]['frame']}}}{text}\n")
                             last_english = text
                             last_chinese = ctext
+
+    def writeAudioSubFile(self):
+        """Create subtitle file from audio analysis results."""
+        sub_file_audio = self.odir / f"{self.media_file.stem}_audio.sub"
+        
+        with open(self.audio_result, "r", encoding="utf8") as f:
+            audio_info = json.load(f)
+            
+        with open(sub_file_audio, "w", encoding="utf8") as f:
+            last_i = len(audio_info) - 1
+            last_english = ""
+            for i, v in enumerate(audio_info):
+                if i < last_i:
+                    if text := v.get("english"):
+                        if text == last_english:
+                            f.write(f"{{{v['pts']}}}{{{audio_info[i+1]['pts']}}}{last_english}\n")
+                        else:
+                            f.write(f"{{{v['pts']}}}{{{audio_info[i+1]['pts']}}}{text}\n")
+                            last_english = text
