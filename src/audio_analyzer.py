@@ -67,10 +67,11 @@ class AudioAnalyzer:
             audio,
             sampling_rate=sampling_rate,
             return_tensors="pt"
-        ).input_features.to(self.device)
+        ).input_features
 
+        # Convert to numpy array and pass to pipeline
         result = self.pipe(
-            input_features,
+            input_features.numpy(),
             generate_kwargs={
                 "language": "zh",
                 "task": "translate",
