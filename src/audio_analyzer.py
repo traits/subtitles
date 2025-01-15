@@ -63,8 +63,7 @@ class AudioAnalyzer:
 
         # Pass raw audio directly to pipeline with generation parameters
         result = self.pipe(
-            audio,
-            sampling_rate=16000,
+            {"sampling_rate": 16000, "raw": audio},
             generate_kwargs={
                 "language": "zh",
                 "task": "translate",
