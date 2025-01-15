@@ -18,7 +18,6 @@ class Settings:
         self.log_frame_info = self.odir / "frame_info.json"  # frame number and pts, parsed from log file (Preprocessor)
         self.ocr_result = self.odir / "ocr_result.json"  # result of vllm inference (OcrAnalyzer)
         self.audio_result = self.odir / "audio_result.json"  # result of llm inference (AudioAnalyzer)
-        self.ocr_info = self.odir / "ocr_info.json"  # intermediate ocr info, created (PostProcessor)
 
         self.odir.mkdir(parents=True, exist_ok=True)
         self.odir_frames.mkdir(parents=True, exist_ok=True)

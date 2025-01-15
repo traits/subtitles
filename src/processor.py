@@ -8,16 +8,17 @@ from settings import Settings
 
 
 class Processor:
+
     def __init__(self):
-        # self._settings = Settings("AiO-ep19.mkv")  # expected in "<GITROOT>/data" dir
-        self._settings = Settings("AiO-ep19.flac")
+        self._settings = Settings("AiO-ep19.mkv")  # expected in "<GITROOT>/data" dir
+        # self._settings = Settings("AiO-ep19.flac")
 
     def run(self):
         # preprocess = PreProcessor(self._settings)
         # preprocess.run()
         # analyzer = OcrAnalyzer(self._settings)
         # analyzer.run()
-        analyzer = AudioAnalyzer(self._settings, model_id="openai/whisper-large-v3")
-        analyzer.run()
-        # postprocessor = PostProcessor(self._settings)
-        # postprocessor.run()
+        # analyzer = AudioAnalyzer(self._settings, model_id="openai/whisper-large-v3")
+        # analyzer.run()
+        postprocessor = PostProcessor(self._settings)
+        postprocessor.run()
