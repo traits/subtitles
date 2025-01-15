@@ -11,13 +11,13 @@ class PostProcessor:
         self.media_file = self.settings.media_file
         self.odir = self.settings.odir
         self.ocr_result = self.settings.ocr_result
+        self.ocr_info_file = self.settings.ocr_info
         self.frameinfo_file = self.settings.log_frame_info
-        self.info_file = self.odir / "info.json"
         self.sub_file = self.odir / f"{self.media_file.stem}.sub"
 
     def run(self):
         result = self.mergeSubTitleInfo()
-        with open(self.info_file, "w", encoding="utf-8") as f:
+        with open(self.ocr_info_file, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
         self.writeSubFile()
 
@@ -46,7 +46,7 @@ class PostProcessor:
         return result
 
     def writeSubFile(self):
-        with open(self.info_file, "r", encoding="utf8") as f:
+        with open(self.ocr_info_file, "r", encoding="utf8") as f:
             info = json.load(f)
         with open(self.sub_file, "w", encoding="utf8") as f:
             last_i = len(info) - 1
