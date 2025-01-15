@@ -55,9 +55,10 @@ class AudioAnalyzer:
 
         # Load audio file and get sampling rate
 
+        # Load audio and resample to 16kHz (required by Whisper)
         audio, sampling_rate = librosa.load(
             str(self.settings.media_file),
-            sr=None,  # Keep original sampling rate
+            sr=16000,  # Resample to Whisper's required rate
             mono=True  # Convert to mono if needed
         )
 
