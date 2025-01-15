@@ -21,7 +21,7 @@ class PostProcessor:
         self.ocr_result = self.settings.ocr_result
         self.audio_result = self.settings.audio_result
         self.frameinfo_file = self.settings.log_frame_info
-        self.sub_file_ocr = self.odir / f"{self.media_file.stem}.sub"
+        self.sub_file_ocr = self.odir / f"{self.media_file.stem}_ocr.sub"
 
     def run(self, process_type: ProcessType = ProcessType.OCR):
         """Run subtitle file generation for the specified processing type.
@@ -81,10 +81,10 @@ class PostProcessor:
     def writeAudioSubFile(self):
         """Create subtitle file from audio analysis results."""
         sub_file_audio = self.odir / f"{self.media_file.stem}_audio.sub"
-        
+
         with open(self.audio_result, "r", encoding="utf8") as f:
             audio_info = json.load(f)
-            
+
         with open(sub_file_audio, "w", encoding="utf8") as f:
             last_i = len(audio_info) - 1
             last_english = ""
