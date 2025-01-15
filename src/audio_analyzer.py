@@ -39,7 +39,10 @@ class AudioAnalyzer:
         if not self.settings.media_file.exists():
             raise FileNotFoundError(f"Audio file not found: {self.settings.media_file}")
             
-        result = self.pipe(str(self.settings.media_file))
+        result = self.pipe(
+            str(self.settings.media_file),
+            generate_kwargs={"language": "zh"}
+        )
         
         # Save results to output directory
         with open(self.settings.audio_result, "w") as f:
