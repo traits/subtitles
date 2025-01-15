@@ -1,6 +1,8 @@
+from pathlib import Path
+
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
-from pathlib import Path
+
 
 class AudioAnalyzer:
     def __init__(self, settings, model_id="openai/whisper-large-v3"):
@@ -13,7 +15,7 @@ class AudioAnalyzer:
         self.settings = settings
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-        
+
         self.model = AutoModelForSpeechSeq2Seq.from_pretrained(
             model_id, 
             torch_dtype=self.torch_dtype, 
@@ -21,9 +23,9 @@ class AudioAnalyzer:
             use_safetensors=True
         )
         self.model.to(self.device)
-        
+
         self.processor = AutoProcessor.from_pretrained(model_id)
-        
+
         self.pipe = pipeline(
             "automatic-speech-recognition",
             model=self.model,
@@ -31,14 +33,15 @@ class AudioAnalyzer:
             feature_extractor=self.processor.feature_extractor,
             torch_dtype=self.torch_dtype,
             device=self.device,
-            return_timestamps=True
+            return_timestamps=True,
+            chunk_length_s=30,  # Force 30-second chunks
         )
 
     def run(self):
         """Run audio analysis on the media file from settings."""
         if not self.settings.media_file.exists():
             raise FileNotFoundError(f"Audio file not found: {self.settings.media_file}")
-            
+
         result = self.pipe(
             str(self.settings.media_file),
             generate_kwargs={
@@ -47,14 +50,16 @@ class AudioAnalyzer:
                 "forced_decoder_ids": None  # Move here to avoid conflict
             }
         )
-        
+
         # Save results to output directory with UTF-8 encoding
         with open(self.settings.audio_result, "w", encoding="utf-8") as f:
             if isinstance(result["text"], str):
+                print("Short case")
                 # Short audio case
                 f.write(result["text"])
                 return result["text"]
             else:
+                print("Long case")
                 # Long audio case with timestamps
                 text_with_timestamps = "\n".join(
                     f"[{chunk['timestamp'][0]:.2f}-{chunk['timestamp'][1]:.2f}] {chunk['text']}"
