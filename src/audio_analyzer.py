@@ -55,12 +55,17 @@ class AudioAnalyzer:
 
         # Load audio file and get sampling rate
 
-        # Load audio and resample to 16kHz (required by Whisper)
+        # Load audio, resample to 16kHz and ensure mono
         audio, sampling_rate = librosa.load(
             str(self.settings.media_file),
-            sr=16000,  # Resample to Whisper's required rate
-            mono=True  # Convert to mono if needed
+            sr=16000,
+            mono=True
         )
+        
+        # Ensure audio is single channel and float32
+        if len(audio.shape) > 1:
+            audio = librosa.to_mono(audio)
+        audio = audio.astype('float32')
 
         # Process audio and get features
         input_features = self.processor(
