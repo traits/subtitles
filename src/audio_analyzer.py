@@ -61,17 +61,9 @@ class AudioAnalyzer:
             mono=True  # Force single channel
         )
 
-        # Process audio to get features and attention mask
-        inputs = self.processor(
-            audio,
-            sampling_rate=16000,
-            return_tensors="pt"
-        ).to(self.device)
-        
-        # Pass processed features with attention mask to pipeline
+        # Pass raw audio directly to pipeline
         result = self.pipe(
-            inputs.input_features,
-            attention_mask=inputs.attention_mask,
+            audio,
             generate_kwargs={
                 "language": "zh",
                 "task": "translate",
