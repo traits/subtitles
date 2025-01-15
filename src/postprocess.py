@@ -23,9 +23,18 @@ class PostProcessor:
         self.frameinfo_file = self.settings.log_frame_info
         self.sub_file_ocr = self.odir / f"{self.media_file.stem}.sub"
 
-    def run(self):
-        self.writeSubFile()
-        self.writeAudioSubFile()
+    def run(self, process_type: ProcessType = ProcessType.OCR):
+        """Run subtitle file generation for the specified processing type.
+        
+        Args:
+            process_type: Type of processing to generate subtitles for (OCR or AUDIO)
+        """
+        if process_type == ProcessType.OCR:
+            self.writeOcrSubFile()
+        elif process_type == ProcessType.AUDIO:
+            self.writeAudioSubFile()
+        else:
+            raise ValueError(f"Unknown process type: {process_type}")
 
     def mergeSubTitleInfo(self) -> list:
         with open(self.ocr_result, "r", encoding="utf8") as f:
@@ -51,7 +60,8 @@ class PostProcessor:
 
         return result
 
-    def writeSubFile(self):
+    def writeOcrSubFile(self):
+        """Create subtitle file from OCR analysis results."""
         info = self.mergeSubTitleInfo()
 
         with open(self.sub_file_ocr, "w", encoding="utf8") as f:
