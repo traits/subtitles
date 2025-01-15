@@ -3,11 +3,13 @@
 torch 
 torchvision
 torchmetrics
-transformers
 torchaudio
 
+transformers
 qwen_vl_utils
 accelerate
+datasets[audio]
+librosa
 
 # deepseek_vl @ git+https://github.com/deepseek-ai/DeepSeek-VL2
 #flash-attn --global-option="--no-build-isolation"
