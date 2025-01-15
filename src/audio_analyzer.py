@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import librosa
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 
@@ -53,7 +54,7 @@ class AudioAnalyzer:
             raise FileNotFoundError(f"Audio file not found: {self.settings.media_file}")
 
         # Load audio file and get sampling rate
-        import librosa
+
         audio, sampling_rate = librosa.load(
             str(self.settings.media_file),
             sr=None,  # Keep original sampling rate
@@ -80,7 +81,7 @@ class AudioAnalyzer:
 
         # Create structured JSON results
         json_results = []
-        
+
         if isinstance(result["text"], str):
             # Short audio case - single segment
             json_results.append({
@@ -94,10 +95,10 @@ class AudioAnalyzer:
                     "english": chunk["text"],  # Translated text
                     "pts": [float(chunk['timestamp'][0]), float(chunk['timestamp'][1])]
                 })
-        
+
         # Save results as JSON to output directory
         import json
         with open(self.settings.audio_result, "w", encoding="utf-8") as f:
             json.dump(json_results, f, ensure_ascii=False, indent=2)
-            
+
         return json_results
