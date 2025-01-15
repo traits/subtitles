@@ -4,6 +4,7 @@ torch
 torchvision
 torchmetrics
 transformers
+torchaudio
 
 qwen_vl_utils
 accelerate

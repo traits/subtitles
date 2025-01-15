@@ -2,3 +2,7 @@ yt-dlp --all-subs https://www.youtube.com/watch?v=GmrH691SEoA    (19)
 https://www.youtube.com/watch?v=MInZHueuLDQ   (20)
 https://www.youtube.com/watch?v=p7ueTuIyQH0   (21)
 https://www.youtube.com/watch?v=qr11Wv5MUOA   (22)
+
+Audio
+
+ffmpeg -i .\AiO=ep19.mkv -vn -acodec flac AiO-ep19.flac

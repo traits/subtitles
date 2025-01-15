@@ -45,11 +45,11 @@ def print_loop_state_modulo(i, loop_size, occ):
         print(f"({i}/{loop_size})")
 
 
-class PreProcessor:
+class VideoPreprocessor:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.video_file = self.settings.video_file
+        self.video_file = self.settings.media_file
 
         self.odir_frames = self.settings.odir_frames
         self.odir_rois = self.settings.odir_rois

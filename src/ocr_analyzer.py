@@ -9,7 +9,7 @@ from transformers import AutoProcessor, AutoTokenizer, Qwen2VLForConditionalGene
 from settings import Settings
 
 
-class Analyzer:
+class OcrAnalyzer:
 
     def __init__(self, settings: Settings):
         self.settings = settings

@@ -8,12 +8,12 @@ class PostProcessor:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.video_file = self.settings.video_file
+        self.media_file = self.settings.media_file
         self.odir = self.settings.odir
         self.ocr_result = self.settings.ocr_result
         self.frameinfo_file = self.settings.log_frame_info
         self.info_file = self.odir / "info.json"
-        self.sub_file = self.odir / f"{self.video_file.stem}.sub"
+        self.sub_file = self.odir / f"{self.media_file.stem}.sub"
 
     def run(self):
         result = self.mergeSubTitleInfo()
