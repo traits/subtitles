@@ -47,8 +47,8 @@ class AudioAnalyzer:
             }
         )
         
-        # Save results to output directory
-        with open(self.settings.audio_result, "w") as f:
+        # Save results to output directory with UTF-8 encoding
+        with open(self.settings.audio_result, "w", encoding="utf-8") as f:
             if isinstance(result["text"], str):
                 # Short audio case
                 f.write(result["text"])
