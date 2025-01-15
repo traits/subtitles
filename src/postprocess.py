@@ -7,6 +7,7 @@ from settings import Settings
 
 class ProcessType(Enum):
     """Type of processing being performed"""
+
     OCR = 1
     AUDIO = 2
 
@@ -20,7 +21,7 @@ class PostProcessor:
         self.ocr_result = self.settings.ocr_result
         self.ocr_info_file = self.settings.ocr_info
         self.frameinfo_file = self.settings.log_frame_info
-        self.sub_file = self.odir / f"{self.media_file.stem}.sub"
+        self.sub_file_ocr = self.odir / f"{self.media_file.stem}.sub"
 
     def run(self):
         result = self.mergeSubTitleInfo()
@@ -55,7 +56,7 @@ class PostProcessor:
     def writeSubFile(self):
         with open(self.ocr_info_file, "r", encoding="utf8") as f:
             info = json.load(f)
-        with open(self.sub_file, "w", encoding="utf8") as f:
+        with open(self.sub_file_ocr, "w", encoding="utf8") as f:
             last_i = len(info) - 1
             last_chinese = ""
             last_english = ""

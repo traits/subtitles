@@ -83,4 +83,4 @@ class AudioAnalyzer:
         with open(self.settings.audio_result, "w", encoding="utf-8") as f:
             json.dump(json_results, f, ensure_ascii=False, indent=2)
 
-        return json_results
+        # return json_results
