@@ -22,6 +22,7 @@ class PostProcessor:
         self.audio_result = self.settings.audio_result
         self.frameinfo_file = self.settings.log_frame_info
         self.sub_file_ocr = self.odir / f"{self.media_file.stem}_ocr.sub"
+        self.sub_file_audio = self.odir / f"{self.media_file.stem}_audio.srt"
 
     def run(self, process_type: ProcessType = ProcessType.OCR):
         """Run subtitle file generation for the specified processing type.
@@ -61,7 +62,7 @@ class PostProcessor:
         return result
 
     def writeOcrSubFile(self):
-        """Create subtitle file from OCR analysis results."""
+        """Create subtitle file from OCR analysis results in SUB format (frame based)."""
         info = self.mergeSubTitleInfo()
 
         with open(self.sub_file_ocr, "w", encoding="utf8") as f:
@@ -79,8 +80,7 @@ class PostProcessor:
                             last_chinese = ctext
 
     def writeAudioSubFile(self):
-        """Create subtitle file from audio analysis results in SRT format."""
-        sub_file_audio = self.odir / f"{self.media_file.stem}_audio.srt"
+        """Create subtitle file from audio analysis results in SRT format (timestamp based)."""
 
         with open(self.audio_result, "r", encoding="utf8") as f:
             audio_info = json.load(f)
@@ -95,11 +95,11 @@ class PostProcessor:
             ms %= 1_000
             return f"{hours:02}:{minutes:02}:{seconds:02},{ms:03}"
 
-        with open(sub_file_audio, "w", encoding="utf8") as f:
+        with open(self.sub_file_audio, "w", encoding="utf8") as f:
             last_i = len(audio_info) - 1
             last_english = ""
             subtitle_index = 1
-            
+
             for i, v in enumerate(audio_info):
                 if i < last_i:
                     if text := v.get("english"):
@@ -107,10 +107,10 @@ class PostProcessor:
                             # Write SRT entry
                             start_time = ms_to_srt_time(v['pts'])
                             end_time = ms_to_srt_time(audio_info[i+1]['pts'])
-                            
+
                             f.write(f"{subtitle_index}\n")
                             f.write(f"{start_time} --> {end_time}\n")
                             f.write(f"{text}\n\n")
-                            
+
                             subtitle_index += 1
                             last_english = text
