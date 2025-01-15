@@ -31,6 +31,7 @@ class AudioAnalyzer:
             feature_extractor=self.processor.feature_extractor,
             torch_dtype=self.torch_dtype,
             device=self.device,
+            return_timestamps=True
         )
 
     def run(self):
@@ -42,6 +43,15 @@ class AudioAnalyzer:
         
         # Save results to output directory
         with open(self.settings.audio_result, "w") as f:
-            f.write(result["text"])
-        
-        return result["text"]
+            if isinstance(result["text"], str):
+                # Short audio case
+                f.write(result["text"])
+                return result["text"]
+            else:
+                # Long audio case with timestamps
+                text_with_timestamps = "\n".join(
+                    f"[{chunk['timestamp'][0]:.2f}-{chunk['timestamp'][1]:.2f}] {chunk['text']}"
+                    for chunk in result["text"]
+                )
+                f.write(text_with_timestamps)
+                return text_with_timestamps
