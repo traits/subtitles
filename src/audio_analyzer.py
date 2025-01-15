@@ -67,10 +67,10 @@ class AudioAnalyzer:
             audio,
             generate_kwargs={
                 "language": "zh",
-                "task": "translate"
+                "task": "translate",
+                "forced_decoder_ids": None
             }
         )
-        generate_kwargs = {"language": "zh", "task": "translate", "forced_decoder_ids": None}
 
         # Create structured JSON results
         json_results = []
