@@ -51,19 +51,28 @@ class AudioAnalyzer:
             }
         )
 
-        # Save results to output directory with UTF-8 encoding
+        # Create structured JSON results
+        json_results = []
+        
+        if isinstance(result["text"], str):
+            # Short audio case - single segment
+            json_results.append({
+                "chinese": result["text"],  # Original detected text
+                "english": result["text"],  # Translated text (same for now)
+                "pts": [0.0, 0.0]  # Dummy timestamps
+            })
+        else:
+            # Long audio case - multiple segments
+            for chunk in result["text"]:
+                json_results.append({
+                    "chinese": chunk["text"],  # Original detected text
+                    "english": chunk["text"],  # Translated text (same for now)
+                    "pts": [float(chunk['timestamp'][0]), float(chunk['timestamp'][1])]
+                })
+        
+        # Save results as JSON to output directory
+        import json
         with open(self.settings.audio_result, "w", encoding="utf-8") as f:
-            if isinstance(result["text"], str):
-                print("Short case")
-                # Short audio case
-                f.write(result["text"])
-                return result["text"]
-            else:
-                print("Long case")
-                # Long audio case with timestamps
-                text_with_timestamps = "\n".join(
-                    f"[{chunk['timestamp'][0]:.2f}-{chunk['timestamp'][1]:.2f}] {chunk['text']}"
-                    for chunk in result["text"]
-                )
-                f.write(text_with_timestamps)
-                return text_with_timestamps
+            json.dump(json_results, f, ensure_ascii=False, indent=2)
+            
+        return json_results
