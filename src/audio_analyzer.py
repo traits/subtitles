@@ -43,8 +43,7 @@ class AudioAnalyzer:
             },
             generate_kwargs={
                 "max_length": 448,  # Whisper's max token length
-                "return_timestamps": True,
-                "attention_mask": True  # Explicitly enable attention masks
+                "return_timestamps": True
             }
         )
 
