@@ -55,36 +55,21 @@ class AudioAnalyzer:
 
         # Load audio file and get sampling rate
 
-        # Load audio and ensure proper format
+        # Load audio file directly using librosa
         audio, sampling_rate = librosa.load(
             str(self.settings.media_file),
-            sr=16000,
-            mono=True
+            sr=16000,  # Whisper expects 16kHz
+            mono=True  # Force single channel
         )
         
-        # Convert to single channel if needed and ensure float32
-        if len(audio.shape) > 1:
-            audio = librosa.to_mono(audio)
-        audio = audio.astype('float32')
-        
-        # Verify audio shape
-        if len(audio.shape) != 1:
-            raise ValueError(f"Audio must be single channel, got shape {audio.shape}")
-            
-        # Process audio and get features
-        input_features = self.processor(
-            audio,
-            sampling_rate=sampling_rate,
-            return_tensors="pt"
-        ).input_features
-        
-        # Verify input features shape
-        if input_features.dim() != 3:
-            raise ValueError(f"Input features must have 3 dimensions, got {input_features.dim()}")
-
-        # Convert to numpy array and pass to pipeline
+        # Pass raw audio directly to the pipeline
         result = self.pipe(
-            input_features.numpy(),
+            audio,
+            generate_kwargs={
+                "language": "zh",
+                "task": "translate"
+            }
+        )
             generate_kwargs={
                 "language": "zh",
                 "task": "translate",
