@@ -76,7 +76,7 @@ class AudioAnalyzer:
                 "language": "zh",
                 "task": "translate",
                 "forced_decoder_ids": None,
-                "return_timestamps": True,
+                "return_timestamps": "word",  # Get word-level timestamps
                 "use_cache": True
             }
         )
@@ -84,19 +84,15 @@ class AudioAnalyzer:
         # Create structured JSON results
         json_results = []
 
-        if isinstance(result["text"], str):
-            # Short audio case - single segment
+        # Process chunks and their timestamps
+        chunks = result["chunks"] if "chunks" in result else [{"text": result["text"], "timestamp": (0.0, None)}]
+        
+        for chunk in chunks:
+            start_time = float(chunk["timestamp"][0]) if chunk["timestamp"][0] is not None else 0.0
             json_results.append({
-                "english": result["text"],  # Translated text
-                "pts": [0.0, 0.0]  # Dummy timestamps
+                "english": chunk["text"].strip(),  # Translated text
+                "start": start_time  # Start timestamp
             })
-        else:
-            # Long audio case - multiple segments
-            for chunk in result["text"]:
-                json_results.append({
-                    "english": chunk["text"],  # Translated text
-                    "pts": [float(chunk['timestamp'][0]), float(chunk['timestamp'][1])]
-                })
 
         # Save results as JSON to output directory
         import json
