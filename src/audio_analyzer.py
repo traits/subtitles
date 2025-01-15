@@ -34,7 +34,17 @@ class AudioAnalyzer:
             torch_dtype=self.torch_dtype,
             device=self.device,
             return_timestamps=True,
-            chunk_length_s=30,  # Force 30-second chunks
+            chunk_length_s=30,
+            # Add these parameters to handle attention masks
+            model_kwargs={
+                "use_cache": True,
+                "forced_decoder_ids": None
+            },
+            generate_kwargs={
+                "max_length": 448,  # Whisper's max token length
+                "return_timestamps": True,
+                "attention_mask": True  # Explicitly enable attention masks
+            }
         )
 
     def run(self):
@@ -42,12 +52,20 @@ class AudioAnalyzer:
         if not self.settings.media_file.exists():
             raise FileNotFoundError(f"Audio file not found: {self.settings.media_file}")
 
-        result = self.pipe(
+        # Get audio features with attention mask
+        inputs = self.processor(
             str(self.settings.media_file),
+            return_tensors="pt",
+            return_attention_mask=True
+        ).to(self.device)
+
+        result = self.pipe(
+            inputs=inputs.input_values,
+            attention_mask=inputs.attention_mask,  # Pass attention mask
             generate_kwargs={
-                "language": "zh",  # Source language (Chinese)
-                "task": "translate",  # Translate to English
-                "forced_decoder_ids": None  # Move here to avoid conflict
+                "language": "zh",
+                "task": "translate",
+                "forced_decoder_ids": None
             }
         )
 
