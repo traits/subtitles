@@ -61,7 +61,7 @@ class AudioAnalyzer:
             sr=16000,  # Whisper expects 16kHz
             mono=True  # Force single channel
         )
-        
+
         # Pass raw audio directly to the pipeline
         result = self.pipe(
             audio,
@@ -70,12 +70,7 @@ class AudioAnalyzer:
                 "task": "translate"
             }
         )
-            generate_kwargs={
-                "language": "zh",
-                "task": "translate",
-                "forced_decoder_ids": None
-            }
-        )
+        generate_kwargs = {"language": "zh", "task": "translate", "forced_decoder_ids": None}
 
         # Create structured JSON results
         json_results = []
