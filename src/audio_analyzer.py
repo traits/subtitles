@@ -37,14 +37,8 @@ class AudioAnalyzer:
             return_timestamps=True,
             chunk_length_s=30,
             # Add these parameters to handle attention masks
-            model_kwargs={
-                "use_cache": True,
-                "forced_decoder_ids": None
-            },
-            generate_kwargs={
-                "max_length": 448,  # Whisper's max token length
-                "return_timestamps": True
-            }
+            model_kwargs={"use_cache": True, "forced_decoder_ids": None},
+            generate_kwargs={"max_length": 448, "return_timestamps": True},  # Whisper's max token length
         )
 
     def run(self):
@@ -78,13 +72,11 @@ class AudioAnalyzer:
 
         # Process chunks and their timestamps
         chunks = result["chunks"] if "chunks" in result else [{"text": result["text"], "timestamp": (0.0, None)}]
-        
+
         for chunk in chunks:
-            start_time = float(chunk["timestamp"][0]) if chunk["timestamp"][0] is not None else 0.0
-            json_results.append({
-                "english": chunk["text"].strip(),  # Translated text
-                "start": start_time  # Start timestamp
-            })
+            ts = chunk["timestamp"][0]
+            start_time = 1000 * round(ts) if ts is not None else 0
+            json_results.append({"english": chunk["text"].strip(), "pts": start_time})  # Translated text  # Start timestamp
 
         # Save results as JSON to output directory
         import json
