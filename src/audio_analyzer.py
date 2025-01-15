@@ -31,7 +31,8 @@ class AudioAnalyzer:
             feature_extractor=self.processor.feature_extractor,
             torch_dtype=self.torch_dtype,
             device=self.device,
-            return_timestamps=True
+            return_timestamps=True,
+            forced_decoder_ids=None  # Explicitly set to None for translation
         )
 
     def run(self):
