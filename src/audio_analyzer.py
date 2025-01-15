@@ -55,24 +55,32 @@ class AudioAnalyzer:
 
         # Load audio file and get sampling rate
 
-        # Load audio, resample to 16kHz and ensure mono
+        # Load audio and ensure proper format
         audio, sampling_rate = librosa.load(
             str(self.settings.media_file),
             sr=16000,
             mono=True
         )
         
-        # Ensure audio is single channel and float32
+        # Convert to single channel if needed and ensure float32
         if len(audio.shape) > 1:
             audio = librosa.to_mono(audio)
         audio = audio.astype('float32')
-
+        
+        # Verify audio shape
+        if len(audio.shape) != 1:
+            raise ValueError(f"Audio must be single channel, got shape {audio.shape}")
+            
         # Process audio and get features
         input_features = self.processor(
             audio,
             sampling_rate=sampling_rate,
             return_tensors="pt"
         ).input_features
+        
+        # Verify input features shape
+        if input_features.dim() != 3:
+            raise ValueError(f"Input features must have 3 dimensions, got {input_features.dim()}")
 
         # Convert to numpy array and pass to pipeline
         result = self.pipe(
