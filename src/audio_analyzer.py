@@ -57,16 +57,14 @@ class AudioAnalyzer:
         if isinstance(result["text"], str):
             # Short audio case - single segment
             json_results.append({
-                "chinese": result["text"],  # Original detected text
-                "english": result["text"],  # Translated text (same for now)
+                "english": result["text"],  # Translated text
                 "pts": [0.0, 0.0]  # Dummy timestamps
             })
         else:
             # Long audio case - multiple segments
             for chunk in result["text"]:
                 json_results.append({
-                    "chinese": chunk["text"],  # Original detected text
-                    "english": chunk["text"],  # Translated text (same for now)
+                    "english": chunk["text"],  # Translated text
                     "pts": [float(chunk['timestamp'][0]), float(chunk['timestamp'][1])]
                 })
         
