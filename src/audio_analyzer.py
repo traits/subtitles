@@ -31,8 +31,7 @@ class AudioAnalyzer:
             feature_extractor=self.processor.feature_extractor,
             torch_dtype=self.torch_dtype,
             device=self.device,
-            return_timestamps=True,
-            forced_decoder_ids=None  # Explicitly set to None for translation
+            return_timestamps=True
         )
 
     def run(self):
@@ -44,7 +43,8 @@ class AudioAnalyzer:
             str(self.settings.media_file),
             generate_kwargs={
                 "language": "zh",  # Source language (Chinese)
-                "task": "translate"  # Translate to English
+                "task": "translate",  # Translate to English
+                "forced_decoder_ids": None  # Move here to avoid conflict
             }
         )
         
