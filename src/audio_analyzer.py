@@ -41,7 +41,10 @@ class AudioAnalyzer:
             
         result = self.pipe(
             str(self.settings.media_file),
-            generate_kwargs={"language": "zh"}
+            generate_kwargs={
+                "language": "zh",  # Source language (Chinese)
+                "task": "translate"  # Translate to English
+            }
         )
         
         # Save results to output directory
