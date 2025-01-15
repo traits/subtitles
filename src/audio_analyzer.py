@@ -52,9 +52,18 @@ class AudioAnalyzer:
         if not self.settings.media_file.exists():
             raise FileNotFoundError(f"Audio file not found: {self.settings.media_file}")
 
+        # Load audio file and get sampling rate
+        import librosa
+        audio, sampling_rate = librosa.load(
+            str(self.settings.media_file),
+            sr=None,  # Keep original sampling rate
+            mono=True  # Convert to mono if needed
+        )
+
         # Get audio features with attention mask
         inputs = self.processor(
-            str(self.settings.media_file),
+            audio,
+            sampling_rate=sampling_rate,
             return_tensors="pt",
             return_attention_mask=True
         ).to(self.device)
