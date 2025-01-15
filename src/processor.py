@@ -17,7 +17,7 @@ class Processor:
         # preprocess.run()
         # analyzer = OcrAnalyzer(self._settings)
         # analyzer.run()
-        analyzer = AudioAnalyzer(self._settings)
+        analyzer = AudioAnalyzer(self._settings, model_id="openai/whisper-large-v3")
         analyzer.run()
         # postprocessor = PostProcessor(self._settings)
         # postprocessor.run()

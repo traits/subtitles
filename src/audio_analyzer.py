@@ -3,8 +3,14 @@ from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 from pathlib import Path
 
 class AudioAnalyzer:
-    def __init__(self, model_id="openai/whisper-large-v3"):
-        """Initialize the audio analyzer with Whisper model."""
+    def __init__(self, settings, model_id="openai/whisper-large-v3"):
+        """Initialize the audio analyzer with Whisper model.
+        
+        Args:
+            settings: Settings object containing media file path
+            model_id: Model identifier for Whisper
+        """
+        self.settings = settings
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
         
@@ -27,23 +33,22 @@ class AudioAnalyzer:
             device=self.device,
         )
 
-    def transcribe_audio(self, flac_path: Path) -> str:
-        """Transcribe audio from a FLAC file.
+    def run(self):
+        """Run audio analysis on the media file from settings."""
+        if not self.settings.media_file.exists():
+            raise FileNotFoundError(f"Audio file not found: {self.settings.media_file}")
+            
+        result = self.pipe(str(self.settings.media_file))
         
-        Args:
-            flac_path: Path to the FLAC audio file
-            
-        Returns:
-            Transcribed text from the audio
-        """
-        if not flac_path.exists():
-            raise FileNotFoundError(f"Audio file not found: {flac_path}")
-            
-        result = self.pipe(str(flac_path))
+        # Save results to output directory
+        with open(self.settings.audio_result, "w") as f:
+            f.write(result["text"])
+        
         return result["text"]
 
 if __name__ == "__main__":
-    analyzer = AudioAnalyzer()
-    audio_file = Path("audio_file.flac")  # Replace with your FLAC file path
-    transcription = analyzer.transcribe_audio(audio_file)
+    from settings import Settings
+    settings = Settings("AiO-ep19.flac")
+    analyzer = AudioAnalyzer(settings)
+    transcription = analyzer.run()
     print(transcription)
