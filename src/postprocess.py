@@ -1,7 +1,14 @@
 import json
+from enum import Enum
 from pathlib import Path
 
 from settings import Settings
+
+
+class ProcessType(Enum):
+    """Type of processing being performed"""
+    OCR = 1
+    AUDIO = 2
 
 
 class PostProcessor:
