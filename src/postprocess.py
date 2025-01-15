@@ -79,20 +79,38 @@ class PostProcessor:
                             last_chinese = ctext
 
     def writeAudioSubFile(self):
-        """Create subtitle file from audio analysis results."""
-        sub_file_audio = self.odir / f"{self.media_file.stem}_audio.sub"
+        """Create subtitle file from audio analysis results in SRT format."""
+        sub_file_audio = self.odir / f"{self.media_file.stem}_audio.srt"
 
         with open(self.audio_result, "r", encoding="utf8") as f:
             audio_info = json.load(f)
 
+        def ms_to_srt_time(ms):
+            """Convert milliseconds to SRT time format (HH:MM:SS,mmm)."""
+            hours = ms // 3_600_000
+            ms %= 3_600_000
+            minutes = ms // 60_000
+            ms %= 60_000
+            seconds = ms // 1_000
+            ms %= 1_000
+            return f"{hours:02}:{minutes:02}:{seconds:02},{ms:03}"
+
         with open(sub_file_audio, "w", encoding="utf8") as f:
             last_i = len(audio_info) - 1
             last_english = ""
+            subtitle_index = 1
+            
             for i, v in enumerate(audio_info):
                 if i < last_i:
                     if text := v.get("english"):
-                        if text == last_english:
-                            f.write(f"{{{v['pts']}}}{{{audio_info[i+1]['pts']}}}{last_english}\n")
-                        else:
-                            f.write(f"{{{v['pts']}}}{{{audio_info[i+1]['pts']}}}{text}\n")
+                        if text != last_english:
+                            # Write SRT entry
+                            start_time = ms_to_srt_time(v['pts'])
+                            end_time = ms_to_srt_time(audio_info[i+1]['pts'])
+                            
+                            f.write(f"{subtitle_index}\n")
+                            f.write(f"{start_time} --> {end_time}\n")
+                            f.write(f"{text}\n\n")
+                            
+                            subtitle_index += 1
                             last_english = text
