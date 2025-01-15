@@ -61,14 +61,24 @@ class AudioAnalyzer:
             mono=True  # Force single channel
         )
 
-        # Pass raw audio directly to the pipeline
+        # Process audio to get features and attention mask
+        inputs = self.processor(
+            audio,
+            sampling_rate=16000,
+            return_tensors="pt"
+        )
+        
+        # Pass processed audio with attention mask to pipeline
         result = self.pipe(
             audio,
             generate_kwargs={
                 "language": "zh",
                 "task": "translate",
-                "forced_decoder_ids": None
-            }
+                "forced_decoder_ids": None,
+                "return_timestamps": True,
+                "use_cache": True
+            },
+            **inputs  # This includes the attention_mask
         )
 
         # Create structured JSON results
