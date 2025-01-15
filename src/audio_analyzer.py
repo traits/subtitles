@@ -45,10 +45,3 @@ class AudioAnalyzer:
             f.write(result["text"])
         
         return result["text"]
-
-if __name__ == "__main__":
-    from settings import Settings
-    settings = Settings("AiO-ep19.flac")
-    analyzer = AudioAnalyzer(settings)
-    transcription = analyzer.run()
-    print(transcription)
