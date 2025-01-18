@@ -13,10 +13,8 @@ class OcrAnalyzer:
 
     def __init__(self):
         self.prompts = settings.data_dir / "prompts.json"
-        self.roi_dir = settings.out_rois
         with open(self.prompts, "r") as f:
             self.prompts = json.load(f)
-        self.ocr_result = settings.result_ocr
 
     def run(self):
         model_name = "Qwen/Qwen2-VL-7B-Instruct"
@@ -39,10 +37,10 @@ class OcrAnalyzer:
         # max_pixels = 4 * 1280 * 28 * 28
         # processor = AutoProcessor.from_pretrained(model_name, min_pixels=min_pixels, max_pixels=max_pixels)
 
-        if self.ocr_result.exists():
-            self.ocr_result.unlink()
+        if settings.result_ocr.exists():
+            settings.result_ocr.unlink()
 
-        images = sorted(list(self.roi_dir.glob("*.png")))
+        images = sorted(list(settings.out_rois.glob("*.png")))
         num_images = len(images)
         chunk_size = 1
         result = []
@@ -97,5 +95,5 @@ class OcrAnalyzer:
 
             print(f"{i // chunk_size + 1}/{num_images // chunk_size}: {cleaned_text}")
 
-        with open(self.ocr_result, "a", encoding="utf-8") as f:
+        with open(settings.result_ocr, "a", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
