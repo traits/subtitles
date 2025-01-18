@@ -3,7 +3,8 @@ from pathlib import Path
 import librosa
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
-from settings import settings
+
+from settings import Settings
 
 
 class AudioAnalyzer:
@@ -42,17 +43,15 @@ class AudioAnalyzer:
         )
 
     def run(self):
-        """Run audio analysis on the media file from settings."""
-        if not settings.media_path.exists():
-            raise FileNotFoundError(f"Audio file not found: {settings.media_path}")
+        """Run audio analysis on the media file from Settings."""
+        if not Settings.media_path.exists():
+            raise FileNotFoundError(f"Audio file not found: {Settings.media_path}")
 
         # Load audio file and get sampling rate
 
         # Load audio file directly using librosa
         audio, sampling_rate = librosa.load(
-            str(settings.media_path),
-            sr=16000,  # Whisper expects 16kHz
-            mono=True  # Force single channel
+            str(Settings.media_path), sr=16000, mono=True  # Whisper expects 16kHz  # Force single channel
         )
 
         # Pass raw audio directly to pipeline
@@ -80,7 +79,7 @@ class AudioAnalyzer:
 
         # Save results as JSON to output directory
         import json
-        with open(settings.result_audio, "w", encoding="utf-8") as f:
+        with open(Settings.result_audio, "w", encoding="utf-8") as f:
             json.dump(json_results, f, ensure_ascii=False, indent=2)
 
         # return json_results

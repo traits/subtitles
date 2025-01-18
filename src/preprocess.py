@@ -6,7 +6,7 @@ from pathlib import Path
 
 import cv2
 
-from settings import settings
+from settings import Settings
 
 
 def print_loop_state(i, loop_size, occ):
@@ -86,7 +86,7 @@ class VideoPreprocessor:
             "auto",
             "-frame_pts",
             "1",
-            str(settings.out_frames / "%05d.png"),
+            str(Settings.out_frames / "%05d.png"),
         ]
 
         result = subprocess.run(
@@ -183,7 +183,7 @@ class VideoPreprocessor:
         num_frames = self.filterFrameInfo(frame_info)
 
         # Calculate the number of .png files in the output directory
-        images = sorted(list(settings.out_frames.glob("*.png")))
+        images = sorted(list(Settings.out_frames.glob("*.png")))
         num_images = len(images)
 
         if_ratio = f"{num_images}/{num_frames}"
@@ -215,7 +215,7 @@ class VideoPreprocessor:
             subtitle_gray = gray[roi_y_cv[0] : roi_y_cv[1], roi_x[0] : roi_x[1]]
 
             # Save the cropped subtitle image
-            subtitle_path = settings.out_rois / f"{img_idx:05d}.png"
+            subtitle_path = Settings.out_rois / f"{img_idx:05d}.png"
             cv2.imwrite(str(subtitle_path), subtitle_gray)
 
             img_idx += 1

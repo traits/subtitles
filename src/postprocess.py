@@ -2,7 +2,7 @@ import json
 from enum import Enum
 from pathlib import Path
 
-from settings import settings
+from settings import Settings
 
 
 class ProcessType(Enum):
@@ -17,9 +17,9 @@ class PostProcessor:
     def __init__(self):
         # Add stream-specific output files
         self.sub_files = {
-            "ocr": settings.out_dir / f"{settings.media_path.stem}_ocr.sub",
-            "audio": settings.out_dir / f"{settings.media_path.stem}_audio.srt",
-            "combined": settings.out_dir / f"{settings.media_path.stem}_combined.srt"
+            "ocr": Settings.out_dir / f"{Settings.media_path.stem}_ocr.sub",
+            "audio": Settings.out_dir / f"{Settings.media_path.stem}_audio.srt",
+            "combined": Settings.out_dir / f"{Settings.media_path.stem}.srt",
         }
 
     def run(self, process_type: ProcessType = ProcessType.OCR):
@@ -37,9 +37,9 @@ class PostProcessor:
             raise ValueError(f"Unknown process type: {process_type}")
 
     def mergeSubTitleInfo(self) -> list:
-        with open(settings.result_ocr, "r", encoding="utf8") as f:
+        with open(Settings.result_ocr, "r", encoding="utf8") as f:
             sinfo = json.load(f)
-        with open(settings.log_frame_info, "r") as f:
+        with open(Settings.log_frame_info, "r") as f:
             finfo = json.load(f)
 
         ls = len(sinfo)
@@ -93,12 +93,12 @@ class PostProcessor:
         # Load OCR data
         ocr_info = self.mergeSubTitleInfo()
         # Load audio data
-        with open(settings.result_audio, "r", encoding="utf8") as f:
+        with open(Settings.result_audio, "r", encoding="utf8") as f:
             audio_info = json.load(f)
 
         with open(self.sub_files["combined"], "w", encoding="utf8") as f:
             subtitle_index = 1
-            
+
             # Write OCR stream
             f.write("=== OCR Subtitles ===\n")
             last_i = len(ocr_info) - 1
@@ -107,7 +107,7 @@ class PostProcessor:
                     if text := v.get("english"):
                         start_time = self.ms_to_srt_time(v['pts'])
                         end_time = self.ms_to_srt_time(ocr_info[i+1]['pts'])
-                        
+
                         f.write(f"{subtitle_index}\n")
                         f.write(f"{start_time} --> {end_time}\n")
                         f.write(f"[OCR] {text}\n\n")
@@ -121,7 +121,7 @@ class PostProcessor:
                     if text := v.get("english"):
                         start_time = self.ms_to_srt_time(v['pts'])
                         end_time = self.ms_to_srt_time(audio_info[i+1]['pts'])
-                        
+
                         f.write(f"{subtitle_index}\n")
                         f.write(f"{start_time} --> {end_time}\n")
                         f.write(f"[Audio] {text}\n\n")
@@ -129,7 +129,7 @@ class PostProcessor:
 
     def writeAudioSubFile(self):
         """Create subtitle file from audio analysis results in SRT format (timestamp based)."""
-        with open(settings.result_audio, "r", encoding="utf8") as f:
+        with open(Settings.result_audio, "r", encoding="utf8") as f:
             audio_info = json.load(f)
 
         with open(self.sub_files["audio"], "w", encoding="utf8") as f:

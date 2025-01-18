@@ -6,13 +6,13 @@ from pathlib import Path
 from qwen_vl_utils import process_vision_info
 from transformers import AutoProcessor, AutoTokenizer, Qwen2VLForConditionalGeneration
 
-from settings import settings
+from settings import Settings
 
 
 class OcrAnalyzer:
 
     def __init__(self):
-        self.prompts = settings.data_dir / "prompts.json"
+        self.prompts = Settings.data_dir / "prompts.json"
         with open(self.prompts, "r") as f:
             self.prompts = json.load(f)
 
@@ -37,10 +37,10 @@ class OcrAnalyzer:
         # max_pixels = 4 * 1280 * 28 * 28
         # processor = AutoProcessor.from_pretrained(model_name, min_pixels=min_pixels, max_pixels=max_pixels)
 
-        if settings.result_ocr.exists():
-            settings.result_ocr.unlink()
+        if Settings.result_ocr.exists():
+            Settings.result_ocr.unlink()
 
-        images = sorted(list(settings.out_rois.glob("*.png")))
+        images = sorted(list(Settings.out_rois.glob("*.png")))
         num_images = len(images)
         chunk_size = 1
         result = []
@@ -95,5 +95,5 @@ class OcrAnalyzer:
 
             print(f"{i // chunk_size + 1}/{num_images // chunk_size}: {cleaned_text}")
 
-        with open(settings.result_ocr, "a", encoding="utf-8") as f:
+        with open(Settings.result_ocr, "a", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
