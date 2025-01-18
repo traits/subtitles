@@ -154,5 +154,15 @@ class PostProcessor:
                     filtered_audio.append(entry)
                     last_english = entry.get("english")
             
-            # Use the helper method to write the stream
-            self._write_subtitle_stream(f, "Audio", filtered_audio, "#FFFFFF", subtitle_index)
+            # Write the audio stream
+            last_i = len(filtered_audio) - 1
+            for i, v in enumerate(filtered_audio):
+                if i < last_i:
+                    if text := v.get("english"):
+                        start_time = self.ms_to_srt_time(v['pts'])
+                        end_time = self.ms_to_srt_time(filtered_audio[i+1]['pts'])
+                        
+                        f.write(f"{subtitle_index}\n")
+                        f.write(f"{start_time} --> {end_time}\n")
+                        f.write(f"{text}\n\n")
+                        subtitle_index += 1
