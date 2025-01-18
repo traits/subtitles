@@ -15,9 +15,6 @@ class ProcessType(Enum):
     def __or__(self, other):
         return ProcessType(self.value | other.value)
 
-    def __or__(self, other):
-        return ProcessType(self.value | other.value)
-
 
 class PostProcessor:
 
