@@ -50,11 +50,7 @@ class VideoPreprocessor:
     def __init__(self):
         pass
 
-        self.odir_frames = settings.out_frames
-        self.odir_rois = settings.out_rois
-
-        self.log_file = settings.log_file
-        self.frame_info_file = settings.log_frame_info
+        pass
 
     def run(self):
         self.extract_roi_images(5)
@@ -192,7 +188,7 @@ class VideoPreprocessor:
         num_frames = self.filterFrameInfo(frame_info)
 
         # Calculate the number of .png files in the output directory
-        images = sorted(list(self.odir_frames.glob("*.png")))
+        images = sorted(list(settings.out_frames.glob("*.png")))
         num_images = len(images)
 
         if_ratio = f"{num_images}/{num_frames}"

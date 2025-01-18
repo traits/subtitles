@@ -32,9 +32,9 @@ class PostProcessor:
             raise ValueError(f"Unknown process type: {process_type}")
 
     def mergeSubTitleInfo(self) -> list:
-        with open(self.ocr_result, "r", encoding="utf8") as f:
+        with open(settings.result_ocr, "r", encoding="utf8") as f:
             sinfo = json.load(f)
-        with open(self.frameinfo_file, "r") as f:
+        with open(settings.log_frame_info, "r") as f:
             finfo = json.load(f)
 
         ls = len(sinfo)
@@ -76,7 +76,7 @@ class PostProcessor:
     def writeAudioSubFile(self):
         """Create subtitle file from audio analysis results in SRT format (timestamp based)."""
 
-        with open(self.audio_result, "r", encoding="utf8") as f:
+        with open(settings.result_audio, "r", encoding="utf8") as f:
             audio_info = json.load(f)
 
         def ms_to_srt_time(ms):
