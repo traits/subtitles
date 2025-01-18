@@ -1,14 +1,26 @@
+from dataclasses import dataclass, field
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 
+@dataclass
 class Settings:
+    media_file: str
+    root: Path = field(init=False)
+    data_dir: Path = field(init=False)
+    odir: Path = field(init=False)
+    odir_frames: Path = field(init=False)
+    odir_rois: Path = field(init=False)
+    log_file: Path = field(init=False)
+    log_frame_info: Path = field(init=False)
+    ocr_result: Path = field(init=False)
+    audio_result: Path = field(init=False)
 
-    def __init__(self, media_file):
-
+    def __post_init__(self):
         self.root = self._get_git_root()
         self.data_dir = self.root / "data"
-        self.media_file = self.data_dir / media_file
+        self.media_file = self.data_dir / self.media_file
 
         self.odir = self.root / "_output" / self.media_file.stem
         self.odir_frames = self.odir / "frames"
