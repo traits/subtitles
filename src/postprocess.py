@@ -78,6 +78,16 @@ class PostProcessor:
                             last_english = text
                             last_chinese = ctext
 
+    def ms_to_srt_time(self, ms):
+        """Convert milliseconds to SRT time format (HH:MM:SS,mmm)."""
+        hours = ms // 3_600_000
+        ms %= 3_600_000
+        minutes = ms // 60_000
+        ms %= 60_000
+        seconds = ms // 1_000
+        ms %= 1_000
+        return f"{hours:02}:{minutes:02}:{seconds:02},{ms:03}"
+
     def writeCombinedSubFile(self):
         """Create a combined subtitle file with both OCR and audio streams."""
         # Load OCR data
@@ -85,16 +95,6 @@ class PostProcessor:
         # Load audio data
         with open(settings.result_audio, "r", encoding="utf8") as f:
             audio_info = json.load(f)
-
-        def ms_to_srt_time(ms):
-            """Convert milliseconds to SRT time format (HH:MM:SS,mmm)."""
-            hours = ms // 3_600_000
-            ms %= 3_600_000
-            minutes = ms // 60_000
-            ms %= 60_000
-            seconds = ms // 1_000
-            ms %= 1_000
-            return f"{hours:02}:{minutes:02}:{seconds:02},{ms:03}"
 
         with open(self.sub_files["combined"], "w", encoding="utf8") as f:
             subtitle_index = 1
@@ -105,8 +105,8 @@ class PostProcessor:
             for i, v in enumerate(ocr_info):
                 if i < last_i:
                     if text := v.get("english"):
-                        start_time = ms_to_srt_time(v['pts'])
-                        end_time = ms_to_srt_time(ocr_info[i+1]['pts'])
+                        start_time = self.ms_to_srt_time(v['pts'])
+                        end_time = self.ms_to_srt_time(ocr_info[i+1]['pts'])
                         
                         f.write(f"{subtitle_index}\n")
                         f.write(f"{start_time} --> {end_time}\n")
@@ -119,8 +119,8 @@ class PostProcessor:
             for i, v in enumerate(audio_info):
                 if i < last_i:
                     if text := v.get("english"):
-                        start_time = ms_to_srt_time(v['pts'])
-                        end_time = ms_to_srt_time(audio_info[i+1]['pts'])
+                        start_time = self.ms_to_srt_time(v['pts'])
+                        end_time = self.ms_to_srt_time(audio_info[i+1]['pts'])
                         
                         f.write(f"{subtitle_index}\n")
                         f.write(f"{start_time} --> {end_time}\n")
@@ -142,8 +142,8 @@ class PostProcessor:
                     if text := v.get("english"):
                         if text != last_english:
                             # Write SRT entry
-                            start_time = ms_to_srt_time(v['pts'])
-                            end_time = ms_to_srt_time(audio_info[i+1]['pts'])
+                            start_time = self.ms_to_srt_time(v['pts'])
+                            end_time = self.ms_to_srt_time(audio_info[i+1]['pts'])
 
                             f.write(f"{subtitle_index}\n")
                             f.write(f"{start_time} --> {end_time}\n")
