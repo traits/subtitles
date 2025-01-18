@@ -1,20 +1,21 @@
 from pathlib import Path
-
 import librosa
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 
 from settings import Settings
+from analyzer import BaseAnalyzer
 
 
-class AudioAnalyzer:
+class AudioAnalyzer(BaseAnalyzer):
     def __init__(self, model_id="openai/whisper-large-v3"):
         """Initialize the audio analyzer with Whisper model.
         
         Args:
-            settings: Settings object containing media file path
             model_id: Model identifier for Whisper
         """
+        super().__init__(Settings.result_audio)
+        
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 

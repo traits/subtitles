@@ -1,20 +1,16 @@
-import json
 import os
 from pathlib import Path
-
-# import torch
 from qwen_vl_utils import process_vision_info
 from transformers import AutoProcessor, AutoTokenizer, Qwen2VLForConditionalGeneration
 
 from settings import Settings
+from analyzer import BaseAnalyzer
 
 
-class OcrAnalyzer:
+class OcrAnalyzer(BaseAnalyzer):
 
     def __init__(self):
-        self.prompts = Settings.data_dir / "prompts.json"
-        with open(self.prompts, "r") as f:
-            self.prompts = json.load(f)
+        super().__init__(Settings.result_ocr)
 
     def run(self):
         model_name = "Qwen/Qwen2-VL-7B-Instruct"
