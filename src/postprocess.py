@@ -21,7 +21,7 @@ class PostProcessor:
     def __init__(self):
         # Add stream-specific output files
         self.sub_files = {
-            "ocr": Settings.out_dir / f"{Settings.media_path.stem}_ocr.sub",
+            "ocr": Settings.out_dir / f"{Settings.media_path.stem}_ocr.srt",
             "audio": Settings.out_dir / f"{Settings.media_path.stem}_audio.srt",
             "combined": Settings.out_dir / f"{Settings.media_path.stem}.srt",
         }
@@ -67,22 +67,25 @@ class PostProcessor:
         return result
 
     def writeOcrSubFile(self):
-        """Create subtitle file from OCR analysis results in SUB format (frame based)."""
+        """Create subtitle file from OCR analysis results in SRT format (timestamp based)."""
         info = self.mergeSubTitleInfo()
 
         with open(self.sub_files["ocr"], "w", encoding="utf8") as f:
-            last_i = len(info) - 1
-            last_chinese = ""
+            subtitle_index = 1
             last_english = ""
+            last_i = len(info) - 1
+            
             for i, v in enumerate(info):
                 if i < last_i:
-                    if text := v.get("english"):
-                        if (ctext := v.get("chinese")) == last_chinese:
-                            f.write(f"{{{v['frame']}}}{{{info[i+1]['frame']}}}{last_english}\n")
-                        else:
-                            f.write(f"{{{v['frame']}}}{{{info[i+1]['frame']}}}{text}\n")
-                            last_english = text
-                            last_chinese = ctext
+                    if text := v.get("english") and text != last_english:
+                        start_time = self.ms_to_srt_time(v['pts'])
+                        end_time = self.ms_to_srt_time(info[i+1]['pts'])
+                        
+                        f.write(f"{subtitle_index}\n")
+                        f.write(f"{start_time} --> {end_time}\n")
+                        f.write(f"{text}\n\n")
+                        subtitle_index += 1
+                        last_english = text
 
     def ms_to_srt_time(self, ms):
         """Convert milliseconds to SRT time format (HH:MM:SS,mmm)."""
