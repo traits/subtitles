@@ -6,12 +6,12 @@ from pathlib import Path
 from qwen_vl_utils import process_vision_info
 from transformers import AutoProcessor, AutoTokenizer, Qwen2VLForConditionalGeneration
 
-from settings import Settings
+from settings import settings
 
 
 class OcrAnalyzer:
 
-    def __init__(self, settings: Settings):
+    def __init__(self):
         self.settings = settings
         self.prompts = self.settings.data_dir / "prompts.json"
         self.roi_dir = self.settings.out_rois

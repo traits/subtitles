@@ -2,7 +2,7 @@ import json
 from enum import Enum
 from pathlib import Path
 
-from settings import Settings
+from settings import settings
 
 
 class ProcessType(Enum):
@@ -14,9 +14,9 @@ class ProcessType(Enum):
 
 class PostProcessor:
 
-    def __init__(self, settings: Settings):
+    def __init__(self):
         self.settings = settings
-        self.media_file = self.settings.media_file
+        self.media_file = self.settings.media_path
         self.odir = self.settings.out_dir
         self.ocr_result = self.settings.result_ocr
         self.audio_result = self.settings.result_audio

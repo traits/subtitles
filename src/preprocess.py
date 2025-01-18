@@ -6,7 +6,7 @@ from pathlib import Path
 
 import cv2
 
-from settings import Settings
+from settings import settings
 
 
 def print_loop_state(i, loop_size, occ):
@@ -47,9 +47,9 @@ def print_loop_state_modulo(i, loop_size, occ):
 
 class VideoPreprocessor:
 
-    def __init__(self, settings: Settings):
+    def __init__(self):
         self.settings = settings
-        self.video_file = self.settings.media_file
+        self.video_file = self.settings.media_path
 
         self.odir_frames = self.settings.out_frames
         self.odir_rois = self.settings.out_rois

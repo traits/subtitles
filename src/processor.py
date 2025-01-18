@@ -4,13 +4,13 @@ from audio_analyzer import AudioAnalyzer
 from ocr_analyzer import OcrAnalyzer
 from postprocess import PostProcessor, ProcessType
 from preprocess import VideoPreprocessor
-from settings import Settings
+from settings import settings
 
 
 class Processor:
 
     def __init__(self):
-        self._settings = Settings
+        self._settings = settings
         self._settings.initialize_dirs()
 
     def run(self):
