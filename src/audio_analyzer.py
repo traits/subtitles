@@ -1,10 +1,11 @@
 from pathlib import Path
+
 import librosa
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 
-from settings import Settings
 from analyzer import BaseAnalyzer
+from settings import Settings
 
 
 class AudioAnalyzer(BaseAnalyzer):
@@ -14,8 +15,8 @@ class AudioAnalyzer(BaseAnalyzer):
         Args:
             model_id: Model identifier for Whisper
         """
-        super().__init__(Settings.result_audio)
-        
+        super().__init__()
+
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 

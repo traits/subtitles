@@ -14,12 +14,12 @@ class Processor:
 
     def run(self):
         # Run both OCR and audio processing
-        # ocr_analyzer = OcrAnalyzer()
+        # ocr_analyzer = OcrAnalyzer(model_id="Qwen/Qwen2-VL-7B-Instruct")
         # ocr_analyzer.run()
 
-        # audio_analyzer = AudioAnalyzer(model_id="openai/whisper-large-v3")
-        # audio_analyzer.run()
+        audio_analyzer = AudioAnalyzer(model_id="openai/whisper-large-v3")
+        audio_analyzer.run()
 
         # Process combined subtitles
-        postprocessor = PostProcessor()
-        postprocessor.run(ProcessType.BOTH)  # Changed from AUDIO to BOTH
+        # postprocessor = PostProcessor()
+        # postprocessor.run(ProcessType.BOTH)  # Changed from AUDIO to BOTH
