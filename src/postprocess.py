@@ -88,34 +88,31 @@ class PostProcessor:
         ms %= 1_000
         return f"{hours:02}:{minutes:02}:{seconds:02},{ms:03}"
 
-    def _write_subtitle_stream(self, f, stream_type: str, subtitle_data: list, color_code: str, subtitle_index: int) -> int:
-        """Generic function to write a subtitle stream.
-        
-        Args:
-            f: File handle to write to
-            stream_type: Type of stream (OCR or AUDIO)
-            subtitle_data: List of subtitle entries
-            color_code: HTML color code for the stream
-            subtitle_index: Current subtitle index
-            
-        Returns:
-            Updated subtitle index after writing
-        """
-        last_i = len(subtitle_data) - 1
-        for i, v in enumerate(subtitle_data):
-            if i < last_i:
-                if text := v.get("english"):
-                    start_time = self.ms_to_srt_time(v['pts'])
-                    end_time = self.ms_to_srt_time(subtitle_data[i+1]['pts'])
-                    
-                    f.write(f"{subtitle_index}\n")
-                    f.write(f"{start_time} --> {end_time}\n")
-                    f.write(f"<font color=\"{color_code}\">[{stream_type}] {text}</font>\n\n")
-                    subtitle_index += 1
-        return subtitle_index
-
     def writeCombinedSubFile(self):
         """Create a combined subtitle file with both OCR and audio streams."""
+        
+        def write_subtitle_stream(f, stream_type: str, subtitle_data: list, color_code: str):
+            """Nested function to write a subtitle stream.
+            
+            Args:
+                f: File handle to write to
+                stream_type: Type of stream (OCR or AUDIO)
+                subtitle_data: List of subtitle entries
+                color_code: HTML color code for the stream
+            """
+            nonlocal subtitle_index
+            last_i = len(subtitle_data) - 1
+            for i, v in enumerate(subtitle_data):
+                if i < last_i:
+                    if text := v.get("english"):
+                        start_time = self.ms_to_srt_time(v['pts'])
+                        end_time = self.ms_to_srt_time(subtitle_data[i+1]['pts'])
+                        
+                        f.write(f"{subtitle_index}\n")
+                        f.write(f"{start_time} --> {end_time}\n")
+                        f.write(f"<font color=\"{color_code}\">[{stream_type}] {text}</font>\n\n")
+                        subtitle_index += 1
+
         # Load OCR data
         ocr_info = self.mergeSubTitleInfo()
         # Load audio data
@@ -126,12 +123,10 @@ class PostProcessor:
             subtitle_index = 1
             
             # Write OCR stream
-            f.write("=== OCR Subtitles ===\n")
-            subtitle_index = self._write_subtitle_stream(f, "OCR", ocr_info, "#00FF00", subtitle_index)
+            write_subtitle_stream(f, "OCR", ocr_info, "#00FF00")
             
             # Write Audio stream
-            f.write("\n=== Audio Subtitles ===\n")
-            subtitle_index = self._write_subtitle_stream(f, "Audio", audio_info, "#FFFF00", subtitle_index)
+            write_subtitle_stream(f, "Audio", audio_info, "#FFFF00")
 
     def writeAudioSubFile(self):
         """Create subtitle file from audio analysis results in SRT format (timestamp based)."""
