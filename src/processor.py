@@ -17,8 +17,8 @@ class Processor:
         # ocr_analyzer = OcrAnalyzer()
         # ocr_analyzer.run()
 
-        audio_analyzer = AudioAnalyzer(model_id="openai/whisper-large-v3")
-        audio_analyzer.run()
+        # audio_analyzer = AudioAnalyzer(model_id="openai/whisper-large-v3")
+        # audio_analyzer.run()
 
         # Process combined subtitles
         postprocessor = PostProcessor()

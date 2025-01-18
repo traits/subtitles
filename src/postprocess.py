@@ -17,10 +17,11 @@ class PostProcessor:
 
     def __init__(self):
         # Add stream-specific output files
+        basename = Settings.media_path.stem
         self.sub_files = {
-            "ocr": Settings.out_dir / f"{Settings.media_path.stem}_ocr.srt",
-            "audio": Settings.out_dir / f"{Settings.media_path.stem}_audio.srt",
-            "combined": Settings.out_dir / f"{Settings.media_path.stem}.srt",
+            "ocr": Settings.out_dir / f"{basename}_ocr.srt",
+            "audio": Settings.out_dir / f"{basename}_audio.srt",
+            "combined": Settings.out_dir / f"{basename}.srt",
         }
 
     def run(self, process_type: ProcessType = ProcessType.OCR):
@@ -31,15 +32,15 @@ class PostProcessor:
         """
         if process_type == ProcessType.NONE:
             return
-            
+
         # Handle OCR processing
         if process_type & ProcessType.OCR:
             self.writeOcrSubFile()
-            
+
         # Handle Audio processing
         if process_type & ProcessType.AUDIO:
             self.writeAudioSubFile()
-            
+
         # Only create combined file if both OCR and Audio are processed
         if process_type & ProcessType.BOTH == ProcessType.BOTH:
             self.writeCombinedSubFile()
@@ -76,13 +77,13 @@ class PostProcessor:
             subtitle_index = 1
             last_english = ""
             last_i = len(info) - 1
-            
+
             for i, v in enumerate(info):
                 if i < last_i:
                     if (text := v.get("english")) and text != last_english:
                         start_time = self.ms_to_srt_time(v['pts'])
                         end_time = self.ms_to_srt_time(info[i+1]['pts'])
-                        
+
                         f.write(f"{subtitle_index}\n")
                         f.write(f"{start_time} --> {end_time}\n")
                         f.write(f"{text}\n\n")
@@ -101,7 +102,7 @@ class PostProcessor:
 
     def writeCombinedSubFile(self):
         """Create a combined subtitle file with both OCR and audio streams."""
-        
+
         def write_subtitle_stream(f, stream_type: str, subtitle_data: list, color_code: str):
             """Nested function to write a subtitle stream.
             
@@ -118,7 +119,7 @@ class PostProcessor:
                     if text := v.get("english"):
                         start_time = self.ms_to_srt_time(v['pts'])
                         end_time = self.ms_to_srt_time(subtitle_data[i+1]['pts'])
-                        
+
                         f.write(f"{subtitle_index}\n")
                         f.write(f"{start_time} --> {end_time}\n")
                         f.write(f"<font color=\"{color_code}\">[{stream_type}] {text}</font>\n\n")
@@ -132,10 +133,10 @@ class PostProcessor:
 
         with open(self.sub_files["combined"], "w", encoding="utf8") as f:
             subtitle_index = 1
-            
+
             # Write OCR stream
             write_subtitle_stream(f, "OCR", ocr_info, "#00FF00")
-            
+
             # Write Audio stream
             write_subtitle_stream(f, "Audio", audio_info, "#FFFF00")
 
@@ -153,7 +154,7 @@ class PostProcessor:
                 if entry.get("english") != last_english:
                     filtered_audio.append(entry)
                     last_english = entry.get("english")
-            
+
             # Write the audio stream
             last_i = len(filtered_audio) - 1
             for i, v in enumerate(filtered_audio):
@@ -161,7 +162,7 @@ class PostProcessor:
                     if text := v.get("english"):
                         start_time = self.ms_to_srt_time(v['pts'])
                         end_time = self.ms_to_srt_time(filtered_audio[i+1]['pts'])
-                        
+
                         f.write(f"{subtitle_index}\n")
                         f.write(f"{start_time} --> {end_time}\n")
                         f.write(f"{text}\n\n")
