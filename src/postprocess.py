@@ -88,6 +88,32 @@ class PostProcessor:
         ms %= 1_000
         return f"{hours:02}:{minutes:02}:{seconds:02},{ms:03}"
 
+    def _write_subtitle_stream(self, f, stream_type: str, subtitle_data: list, color_code: str, subtitle_index: int) -> int:
+        """Generic function to write a subtitle stream.
+        
+        Args:
+            f: File handle to write to
+            stream_type: Type of stream (OCR or AUDIO)
+            subtitle_data: List of subtitle entries
+            color_code: HTML color code for the stream
+            subtitle_index: Current subtitle index
+            
+        Returns:
+            Updated subtitle index after writing
+        """
+        last_i = len(subtitle_data) - 1
+        for i, v in enumerate(subtitle_data):
+            if i < last_i:
+                if text := v.get("english"):
+                    start_time = self.ms_to_srt_time(v['pts'])
+                    end_time = self.ms_to_srt_time(subtitle_data[i+1]['pts'])
+                    
+                    f.write(f"{subtitle_index}\n")
+                    f.write(f"{start_time} --> {end_time}\n")
+                    f.write(f"<font color=\"{color_code}\">[{stream_type}] {text}</font>\n\n")
+                    subtitle_index += 1
+        return subtitle_index
+
     def writeCombinedSubFile(self):
         """Create a combined subtitle file with both OCR and audio streams."""
         # Load OCR data
@@ -98,34 +124,14 @@ class PostProcessor:
 
         with open(self.sub_files["combined"], "w", encoding="utf8") as f:
             subtitle_index = 1
-
+            
             # Write OCR stream
             f.write("=== OCR Subtitles ===\n")
-            last_i = len(ocr_info) - 1
-            for i, v in enumerate(ocr_info):
-                if i < last_i:
-                    if text := v.get("english"):
-                        start_time = self.ms_to_srt_time(v['pts'])
-                        end_time = self.ms_to_srt_time(ocr_info[i+1]['pts'])
-
-                        f.write(f"{subtitle_index}\n")
-                        f.write(f"{start_time} --> {end_time}\n")
-                        f.write(f"[OCR] {text}\n\n")
-                        subtitle_index += 1
-
+            subtitle_index = self._write_subtitle_stream(f, "OCR", ocr_info, "#00FF00", subtitle_index)
+            
             # Write Audio stream
             f.write("\n=== Audio Subtitles ===\n")
-            last_i = len(audio_info) - 1
-            for i, v in enumerate(audio_info):
-                if i < last_i:
-                    if text := v.get("english"):
-                        start_time = self.ms_to_srt_time(v['pts'])
-                        end_time = self.ms_to_srt_time(audio_info[i+1]['pts'])
-
-                        f.write(f"{subtitle_index}\n")
-                        f.write(f"{start_time} --> {end_time}\n")
-                        f.write(f"[Audio] {text}\n\n")
-                        subtitle_index += 1
+            subtitle_index = self._write_subtitle_stream(f, "Audio", audio_info, "#FFFF00", subtitle_index)
 
     def writeAudioSubFile(self):
         """Create subtitle file from audio analysis results in SRT format (timestamp based)."""
@@ -133,21 +139,14 @@ class PostProcessor:
             audio_info = json.load(f)
 
         with open(self.sub_files["audio"], "w", encoding="utf8") as f:
-            last_i = len(audio_info) - 1
-            last_english = ""
             subtitle_index = 1
-
-            for i, v in enumerate(audio_info):
-                if i < last_i:
-                    if text := v.get("english"):
-                        if text != last_english:
-                            # Write SRT entry
-                            start_time = self.ms_to_srt_time(v['pts'])
-                            end_time = self.ms_to_srt_time(audio_info[i+1]['pts'])
-
-                            f.write(f"{subtitle_index}\n")
-                            f.write(f"{start_time} --> {end_time}\n")
-                            f.write(f"{text}\n\n")
-
-                            subtitle_index += 1
-                            last_english = text
+            # Filter out duplicate consecutive entries
+            filtered_audio = []
+            last_english = ""
+            for entry in audio_info:
+                if entry.get("english") != last_english:
+                    filtered_audio.append(entry)
+                    last_english = entry.get("english")
+            
+            # Use the helper method to write the stream
+            self._write_subtitle_stream(f, "Audio", filtered_audio, "#FFFFFF", subtitle_index)
