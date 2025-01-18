@@ -1,19 +1,16 @@
 import json
-from enum import Enum
+from enum import IntFlag
 from pathlib import Path
 
 from settings import Settings
 
 
-class ProcessType(Enum):
+class ProcessType(IntFlag):
     """Type of processing being performed"""
     NONE = 0
     OCR = 1
     AUDIO = 2
     BOTH = OCR | AUDIO  # Combined processing type
-
-    def __or__(self, other):
-        return ProcessType(self.value | other.value)
 
 
 class PostProcessor:
