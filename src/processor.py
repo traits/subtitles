@@ -22,4 +22,4 @@ class Processor:
 
         # Process combined subtitles
         postprocessor = PostProcessor()
-        postprocessor.run(ProcessType.AUDIO)  # This will now generate all subtitle files
+        postprocessor.run(ProcessType.BOTH)  # Changed from AUDIO to BOTH

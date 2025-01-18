@@ -7,9 +7,13 @@ from settings import Settings
 
 class ProcessType(Enum):
     """Type of processing being performed"""
-
+    NONE = 0
     OCR = 1
     AUDIO = 2
+    BOTH = OCR | AUDIO  # Combined processing type
+
+    def __or__(self, other):
+        return ProcessType(self.value | other.value)
 
 
 class PostProcessor:
@@ -26,15 +30,17 @@ class PostProcessor:
         """Run subtitle file generation for the specified processing type.
         
         Args:
-            process_type: Type of processing to generate subtitles for (OCR or AUDIO)
+            process_type: Type of processing to generate subtitles for (OCR, AUDIO, or BOTH)
         """
-        if process_type == ProcessType.OCR:
+        if process_type == ProcessType.NONE:
+            return
+            
+        if process_type & ProcessType.OCR:
             self.writeOcrSubFile()
-        elif process_type == ProcessType.AUDIO:
+            
+        if process_type & ProcessType.AUDIO:
             self.writeAudioSubFile()
-            self.writeCombinedSubFile()  # Add combined subtitle generation
-        else:
-            raise ValueError(f"Unknown process type: {process_type}")
+            self.writeCombinedSubFile()
 
     def mergeSubTitleInfo(self) -> list:
         with open(Settings.result_ocr, "r", encoding="utf8") as f:
