@@ -35,11 +35,16 @@ class PostProcessor:
         if process_type == ProcessType.NONE:
             return
             
+        # Handle OCR processing
         if process_type & ProcessType.OCR:
             self.writeOcrSubFile()
             
+        # Handle Audio processing
         if process_type & ProcessType.AUDIO:
             self.writeAudioSubFile()
+            
+        # Only create combined file if both OCR and Audio are processed
+        if process_type & ProcessType.BOTH == ProcessType.BOTH:
             self.writeCombinedSubFile()
 
     def mergeSubTitleInfo(self) -> list:
