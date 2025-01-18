@@ -13,11 +13,15 @@ class Processor:
         settings.initialize_dirs()
 
     def run(self):
-        # preprocess = PreProcessor(self._settings)
-        # preprocess.run()
-        # analyzer = OcrAnalyzer(self._settings)
-        # analyzer.run()
-        # analyzer = AudioAnalyzer(self._settings, model_id="openai/whisper-large-v3")
-        # analyzer.run()
-        postprocessor = PostProcessor(self._settings)
-        postprocessor.run(ProcessType.AUDIO)
+        settings.initialize_dirs()
+        
+        # Run both OCR and audio processing
+        ocr_analyzer = OcrAnalyzer()
+        ocr_analyzer.run()
+        
+        audio_analyzer = AudioAnalyzer(model_id="openai/whisper-large-v3")
+        audio_analyzer.run()
+        
+        # Process combined subtitles
+        postprocessor = PostProcessor()
+        postprocessor.run(ProcessType.AUDIO)  # This will now generate all subtitle files

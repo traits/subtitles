@@ -15,8 +15,12 @@ class ProcessType(Enum):
 class PostProcessor:
 
     def __init__(self):
-        self.sub_file_ocr = settings.out_dir / f"{settings.media_path.stem}_ocr.sub"
-        self.sub_file_audio = settings.out_dir / f"{settings.media_path.stem}_audio.srt"
+        # Add stream-specific output files
+        self.sub_files = {
+            "ocr": settings.out_dir / f"{settings.media_path.stem}_ocr.sub",
+            "audio": settings.out_dir / f"{settings.media_path.stem}_audio.srt",
+            "combined": settings.out_dir / f"{settings.media_path.stem}_combined.srt"
+        }
 
     def run(self, process_type: ProcessType = ProcessType.OCR):
         """Run subtitle file generation for the specified processing type.
@@ -28,6 +32,7 @@ class PostProcessor:
             self.writeOcrSubFile()
         elif process_type == ProcessType.AUDIO:
             self.writeAudioSubFile()
+            self.writeCombinedSubFile()  # Add combined subtitle generation
         else:
             raise ValueError(f"Unknown process type: {process_type}")
 
@@ -59,7 +64,7 @@ class PostProcessor:
         """Create subtitle file from OCR analysis results in SUB format (frame based)."""
         info = self.mergeSubTitleInfo()
 
-        with open(self.sub_file_ocr, "w", encoding="utf8") as f:
+        with open(self.sub_files["ocr"], "w", encoding="utf8") as f:
             last_i = len(info) - 1
             last_chinese = ""
             last_english = ""
@@ -73,9 +78,11 @@ class PostProcessor:
                             last_english = text
                             last_chinese = ctext
 
-    def writeAudioSubFile(self):
-        """Create subtitle file from audio analysis results in SRT format (timestamp based)."""
-
+    def writeCombinedSubFile(self):
+        """Create a combined subtitle file with both OCR and audio streams."""
+        # Load OCR data
+        ocr_info = self.mergeSubTitleInfo()
+        # Load audio data
         with open(settings.result_audio, "r", encoding="utf8") as f:
             audio_info = json.load(f)
 
@@ -89,7 +96,43 @@ class PostProcessor:
             ms %= 1_000
             return f"{hours:02}:{minutes:02}:{seconds:02},{ms:03}"
 
-        with open(self.sub_file_audio, "w", encoding="utf8") as f:
+        with open(self.sub_files["combined"], "w", encoding="utf8") as f:
+            subtitle_index = 1
+            
+            # Write OCR stream
+            f.write("=== OCR Subtitles ===\n")
+            last_i = len(ocr_info) - 1
+            for i, v in enumerate(ocr_info):
+                if i < last_i:
+                    if text := v.get("english"):
+                        start_time = ms_to_srt_time(v['pts'])
+                        end_time = ms_to_srt_time(ocr_info[i+1]['pts'])
+                        
+                        f.write(f"{subtitle_index}\n")
+                        f.write(f"{start_time} --> {end_time}\n")
+                        f.write(f"[OCR] {text}\n\n")
+                        subtitle_index += 1
+
+            # Write Audio stream
+            f.write("\n=== Audio Subtitles ===\n")
+            last_i = len(audio_info) - 1
+            for i, v in enumerate(audio_info):
+                if i < last_i:
+                    if text := v.get("english"):
+                        start_time = ms_to_srt_time(v['pts'])
+                        end_time = ms_to_srt_time(audio_info[i+1]['pts'])
+                        
+                        f.write(f"{subtitle_index}\n")
+                        f.write(f"{start_time} --> {end_time}\n")
+                        f.write(f"[Audio] {text}\n\n")
+                        subtitle_index += 1
+
+    def writeAudioSubFile(self):
+        """Create subtitle file from audio analysis results in SRT format (timestamp based)."""
+        with open(settings.result_audio, "r", encoding="utf8") as f:
+            audio_info = json.load(f)
+
+        with open(self.sub_files["audio"], "w", encoding="utf8") as f:
             last_i = len(audio_info) - 1
             last_english = ""
             subtitle_index = 1
