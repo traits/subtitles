@@ -3,6 +3,7 @@ from pathlib import Path
 import librosa
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+from settings import settings
 
 
 class AudioAnalyzer:
