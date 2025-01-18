@@ -51,8 +51,8 @@ class VideoPreprocessor:
         self.settings = settings
         self.video_file = self.settings.media_file
 
-        self.odir_frames = self.settings.odir_frames
-        self.odir_rois = self.settings.odir_rois
+        self.odir_frames = self.settings.out_frames
+        self.odir_rois = self.settings.out_rois
 
         self.log_file = self.settings.log_file
         self.frame_info_file = self.settings.log_frame_info

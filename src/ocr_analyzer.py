@@ -14,10 +14,10 @@ class OcrAnalyzer:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.prompts = self.settings.data_dir / "prompts.json"
-        self.roi_dir = self.settings.odir_rois
+        self.roi_dir = self.settings.out_rois
         with open(self.prompts, "r") as f:
             self.prompts = json.load(f)
-        self.ocr_result = self.settings.ocr_result
+        self.ocr_result = self.settings.result_ocr
 
     def run(self):
         model_name = "Qwen/Qwen2-VL-7B-Instruct"

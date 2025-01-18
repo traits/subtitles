@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
 import subprocess
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -9,31 +9,31 @@ class Settings:
     media_file: str
     root: Path = field(init=False)
     data_dir: Path = field(init=False)
-    odir: Path = field(init=False)
-    odir_frames: Path = field(init=False)
-    odir_rois: Path = field(init=False)
+    out_dir: Path = field(init=False)
+    out_frames: Path = field(init=False)
+    out_rois: Path = field(init=False)
     log_file: Path = field(init=False)
     log_frame_info: Path = field(init=False)
-    ocr_result: Path = field(init=False)
-    audio_result: Path = field(init=False)
+    result_ocr: Path = field(init=False)
+    result_audio: Path = field(init=False)
 
     def __post_init__(self):
         self.root = self._get_git_root()
         self.data_dir = self.root / "data"
         self.media_file = self.data_dir / self.media_file
 
-        self.odir = self.root / "_output" / self.media_file.stem
-        self.odir_frames = self.odir / "frames"
-        self.odir_rois = self.odir / "rois"
+        self.out_dir = self.root / "_output" / self.media_file.stem
+        self.out_frames = self.out_dir / "frames"
+        self.out_rois = self.out_dir / "rois"
 
-        self.log_file = self.odir / "ffmpeg.log"  # ffmpeg log file (loglevel 'debug') (Preprocessor)
-        self.log_frame_info = self.odir / "frame_info.json"  # frame number and pts, parsed from log file (Preprocessor)
-        self.ocr_result = self.odir / "ocr_result.json"  # result of vllm inference (OcrAnalyzer)
-        self.audio_result = self.odir / "audio_result.json"  # result of llm inference (AudioAnalyzer)
+        self.log_file = self.out_dir / "ffmpeg.log"  # ffmpeg log file (loglevel 'debug') (Preprocessor)
+        self.log_frame_info = self.out_dir / "frame_info.json"  # frame number and pts, parsed from log file (Preprocessor)
+        self.result_ocr = self.out_dir / "result_ocr.json"  # result of vllm inference (OcrAnalyzer)
+        self.result_audio = self.out_dir / "result_audio.json"  # result of llm inference (AudioAnalyzer)
 
-        self.odir.mkdir(parents=True, exist_ok=True)
-        self.odir_frames.mkdir(parents=True, exist_ok=True)
-        self.odir_rois.mkdir(parents=True, exist_ok=True)
+        self.out_dir.mkdir(parents=True, exist_ok=True)
+        self.out_frames.mkdir(parents=True, exist_ok=True)
+        self.out_rois.mkdir(parents=True, exist_ok=True)
 
     def _get_git_root(self) -> Path:
         root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
