@@ -6,7 +6,7 @@ from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 
 
 class AudioAnalyzer:
-    def __init__(self, settings, model_id="openai/whisper-large-v3"):
+    def __init__(self, model_id="openai/whisper-large-v3"):
         """Initialize the audio analyzer with Whisper model.
         
         Args:
