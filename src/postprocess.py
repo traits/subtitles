@@ -15,13 +15,8 @@ class ProcessType(Enum):
 class PostProcessor:
 
     def __init__(self):
-        self.media_file = settings.media_path
-        self.odir = settings.out_dir
-        self.ocr_result = settings.result_ocr
-        self.audio_result = settings.result_audio
-        self.frameinfo_file = settings.log_frame_info
-        self.sub_file_ocr = self.odir / f"{self.media_file.stem}_ocr.sub"
-        self.sub_file_audio = self.odir / f"{self.media_file.stem}_audio.srt"
+        self.sub_file_ocr = settings.out_dir / f"{settings.media_path.stem}_ocr.sub"
+        self.sub_file_audio = settings.out_dir / f"{settings.media_path.stem}_audio.srt"
 
     def run(self, process_type: ProcessType = ProcessType.OCR):
         """Run subtitle file generation for the specified processing type.

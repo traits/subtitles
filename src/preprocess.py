@@ -48,7 +48,7 @@ def print_loop_state_modulo(i, loop_size, occ):
 class VideoPreprocessor:
 
     def __init__(self):
-        self.video_file = settings.media_path
+        pass
 
         self.odir_frames = settings.out_frames
         self.odir_rois = settings.out_rois
@@ -95,7 +95,7 @@ class VideoPreprocessor:
             "auto",
             "-frame_pts",
             "1",
-            str(self.odir_frames / "%05d.png"),
+            str(settings.out_frames / "%05d.png"),
         ]
 
         result = subprocess.run(
@@ -224,7 +224,7 @@ class VideoPreprocessor:
             subtitle_gray = gray[roi_y_cv[0] : roi_y_cv[1], roi_x[0] : roi_x[1]]
 
             # Save the cropped subtitle image
-            subtitle_path = self.odir_rois / f"{img_idx:05d}.png"
+            subtitle_path = settings.out_rois / f"{img_idx:05d}.png"
             cv2.imwrite(str(subtitle_path), subtitle_gray)
 
             img_idx += 1
