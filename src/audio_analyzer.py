@@ -53,10 +53,7 @@ class AudioAnalyzer(BaseAnalyzer):
 
         # Load audio file using librosa's recommended method
         audio, sampling_rate = librosa.load(
-            str(Settings.media_path),
-            sr=16000,  # Whisper expects 16kHz
-            mono=True,  # Force single channel
-            res_type="soxr_vhq"  # Use high quality resampling
+            str(Settings.media_path), sr=16000, mono=True  # Whisper expects 16kHz  # Force single channel
         )
 
         # Pass raw audio directly to pipeline
