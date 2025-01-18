@@ -10,8 +10,7 @@ from settings import settings
 class Processor:
 
     def __init__(self):
-        self._settings = settings
-        self._settings.initialize_dirs()
+        settings.initialize_dirs()
 
     def run(self):
         # preprocess = PreProcessor(self._settings)

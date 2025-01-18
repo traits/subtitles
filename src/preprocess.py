@@ -48,14 +48,13 @@ def print_loop_state_modulo(i, loop_size, occ):
 class VideoPreprocessor:
 
     def __init__(self):
-        self.settings = settings
-        self.video_file = self.settings.media_path
+        self.video_file = settings.media_path
 
-        self.odir_frames = self.settings.out_frames
-        self.odir_rois = self.settings.out_rois
+        self.odir_frames = settings.out_frames
+        self.odir_rois = settings.out_rois
 
-        self.log_file = self.settings.log_file
-        self.frame_info_file = self.settings.log_frame_info
+        self.log_file = settings.log_file
+        self.frame_info_file = settings.log_frame_info
 
     def run(self):
         self.extract_roi_images(5)

@@ -14,7 +14,6 @@ class AudioAnalyzer:
             settings: Settings object containing media file path
             model_id: Model identifier for Whisper
         """
-        self.settings = settings
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
@@ -44,14 +43,14 @@ class AudioAnalyzer:
 
     def run(self):
         """Run audio analysis on the media file from settings."""
-        if not self.settings.media_file.exists():
-            raise FileNotFoundError(f"Audio file not found: {self.settings.media_file}")
+        if not settings.media_path.exists():
+            raise FileNotFoundError(f"Audio file not found: {settings.media_path}")
 
         # Load audio file and get sampling rate
 
         # Load audio file directly using librosa
         audio, sampling_rate = librosa.load(
-            str(self.settings.media_file),
+            str(settings.media_path),
             sr=16000,  # Whisper expects 16kHz
             mono=True  # Force single channel
         )
@@ -81,7 +80,7 @@ class AudioAnalyzer:
 
         # Save results as JSON to output directory
         import json
-        with open(self.settings.audio_result, "w", encoding="utf-8") as f:
+        with open(settings.result_audio, "w", encoding="utf-8") as f:
             json.dump(json_results, f, ensure_ascii=False, indent=2)
 
         # return json_results

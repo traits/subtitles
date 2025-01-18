@@ -15,12 +15,11 @@ class ProcessType(Enum):
 class PostProcessor:
 
     def __init__(self):
-        self.settings = settings
-        self.media_file = self.settings.media_path
-        self.odir = self.settings.out_dir
-        self.ocr_result = self.settings.result_ocr
-        self.audio_result = self.settings.result_audio
-        self.frameinfo_file = self.settings.log_frame_info
+        self.media_file = settings.media_path
+        self.odir = settings.out_dir
+        self.ocr_result = settings.result_ocr
+        self.audio_result = settings.result_audio
+        self.frameinfo_file = settings.log_frame_info
         self.sub_file_ocr = self.odir / f"{self.media_file.stem}_ocr.sub"
         self.sub_file_audio = self.odir / f"{self.media_file.stem}_audio.srt"
 
