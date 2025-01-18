@@ -46,14 +46,23 @@ class AudioAnalyzer(BaseAnalyzer):
 
     def run(self):
         """Run audio analysis on the media file from Settings."""
-        if not Settings.media_path.exists():
-            raise FileNotFoundError(f"Audio file not found: {Settings.media_path}")
+        if not Settings.audio_file.exists():
+            raise FileNotFoundError(f"Audio file not found: {Settings.audio_file}")
+
+        # from pyannote.audio import Pipeline
+
+        # pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization")
+        # pipeline.to(torch.device("cuda"))
+        # dz = pipeline(str(Settings.audio_file))
+
+        # with open(Settings.out_diarization, "w") as text_file:
+        #     text_file.write(str(dz))
+
+        # return
 
         # Load audio file and get sampling rate
-
-        # Load audio file using librosa's recommended method
         audio, sampling_rate = librosa.load(
-            str(Settings.media_path), sr=16000, mono=True  # Whisper expects 16kHz  # Force single channel
+            str(Settings.audio_file), sr=16000, mono=True  # Whisper expects 16kHz  # Force single channel
         )
 
         # Pass raw audio directly to pipeline

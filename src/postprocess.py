@@ -17,7 +17,7 @@ class PostProcessor:
 
     def __init__(self):
         # Add stream-specific output files
-        basename = Settings.media_path.stem
+        basename = Settings.media_base_name
         self.sub_files = {
             "ocr": Settings.out_dir / f"{basename}_ocr.srt",
             "audio": Settings.out_dir / f"{basename}_audio.srt",

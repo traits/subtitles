@@ -5,17 +5,20 @@ from typing import Optional
 
 
 class Settings:
-    media_file: str = "AiO-ep19.mkv"  # Default media file name
+    media_base_name: str = "AiO-ep19"  # Default media file base name
 
     # Initialize paths once when class is loaded
     root: Path = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).decode("utf-8").strip())
     data_dir: Path = root / "data"
-    media_path: Path = data_dir / media_file
+    video_file: Path = data_dir / f"{media_base_name}.mkv"
+    audio_file: Path = data_dir / f"{media_base_name}.flac"
     prompts_path = data_dir / "prompts.json"
 
-    out_dir: Path = root / "_output" / media_path.stem
+    out_dir: Path = root / "_output" / media_base_name
     out_frames: Path = out_dir / "frames"
     out_rois: Path = out_dir / "rois"
+
+    out_diarization: Path = out_dir / "diarization.txt"
 
     log_file: Path = out_dir / "ffmpeg.log"  # ffmpeg log file (loglevel 'debug') (Preprocessor)
     log_frame_info: Path = out_dir / "frame_info.json"  # frame number and pts, parsed from log file (Preprocessor)
