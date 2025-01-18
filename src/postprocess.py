@@ -77,7 +77,7 @@ class PostProcessor:
             
             for i, v in enumerate(info):
                 if i < last_i:
-                    if text := v.get("english") and text != last_english:
+                    if (text := v.get("english")) and text != last_english:
                         start_time = self.ms_to_srt_time(v['pts'])
                         end_time = self.ms_to_srt_time(info[i+1]['pts'])
                         
