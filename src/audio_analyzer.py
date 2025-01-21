@@ -1,11 +1,43 @@
 from pathlib import Path
+import json
 
 import librosa
 import torch
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline, AutoModelForSeq2SeqLM, AutoTokenizer
 
 from analyzer import BaseAnalyzer
 from settings import Settings
+
+
+class Translator:
+    """Specialized translator for converting Chinese text to English"""
+    
+    def __init__(self, model_id="Qwen/Qwen2-7B-Instruct"):
+        self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_id,
+            torch_dtype=self.torch_dtype,
+            device_map=self.device
+        )
+        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+        
+    def translate_batch(self, texts: list[str]) -> list[str]:
+        """Translate a batch of Chinese texts to English"""
+        inputs = self.tokenizer(
+            texts,
+            padding=True,
+            truncation=True,
+            return_tensors="pt"
+        ).to(self.device)
+        
+        outputs = self.model.generate(
+            **inputs,
+            max_new_tokens=500
+        )
+        
+        return self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
 
 
 class AudioAnalyzer(BaseAnalyzer):
@@ -90,8 +122,8 @@ class AudioAnalyzer(BaseAnalyzer):
             
         return sentences
 
-    def run(self):
-        """Run audio analysis on the media file from Settings."""
+    def transcribe(self):
+        """Convert speech to text in original language (Chinese)"""
         if not Settings.audio_file.exists():
             raise FileNotFoundError(f"Audio file not found: {Settings.audio_file}")
 
@@ -101,11 +133,11 @@ class AudioAnalyzer(BaseAnalyzer):
         )
 
         # Pass raw audio directly to pipeline
-        result = self.pipe(
+        return self.pipe(
             audio,
-            generate_kwargs={  # arguments for model (whisper)
+            generate_kwargs={
                 "language": "zh",
-                "task": "translate",
+                "task": "transcribe",  # Transcribe only, no translation
                 # "task": "transcribe",
                 "forced_decoder_ids": None,
                 "return_timestamps": "word",  # Get word-level timestamps
@@ -113,8 +145,19 @@ class AudioAnalyzer(BaseAnalyzer):
             },
         )
 
-        # Create structured JSON results
-        json_results = []
+    def translate(self, sentences: list[dict]) -> list[dict]:
+        """Translate Chinese sentences to English using specialist model"""
+        translator = Translator()
+        chinese_texts = [s["text"] for s in sentences]
+        english_texts = translator.translate_batch(chinese_texts)
+        
+        for s, en_text in zip(sentences, english_texts):
+            s["english"] = en_text.strip()
+        
+        return sentences
+
+    def run(self):
+        """Run full audio processing pipeline"""
 
         # Process chunks and group into sentences
         chunks = result["chunks"] if "chunks" in result else [{
@@ -124,12 +167,26 @@ class AudioAnalyzer(BaseAnalyzer):
 
         sentences = self._group_into_sentences(chunks)
 
-        for sentence in sentences:
-            json_results.append({
-                "english": sentence["text"],
-                "start_pts": int(sentence["start"]),
-                "end_pts": int(sentence["end"])
-            })
+        # Process through pipeline
+        result = self.transcribe()
+        
+        # Create sentence structure
+        chunks = result["chunks"] if "chunks" in result else [{
+            "text": result["text"], 
+            "timestamp": (0.0, len(audio)/16000)
+        }]
+        sentences = self._group_into_sentences(chunks)
+        
+        # Perform translation
+        translated_sentences = self.translate(sentences)
+        
+        # Build final results
+        json_results = [{
+            "original": s["text"],
+            "english": s["english"],
+            "start_pts": int(s["start"]),
+            "end_pts": int(s["end"])
+        } for s in translated_sentences]
 
         # Save results as JSON to output directory
         import json
