@@ -1,9 +1,15 @@
-from pathlib import Path
 import json
+from pathlib import Path
 
 import librosa
 import torch
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline, AutoModelForCausalLM, AutoTokenizer
+from transformers import (
+    AutoModelForCausalLM,
+    AutoModelForSpeechSeq2Seq,
+    AutoProcessor,
+    AutoTokenizer,
+    pipeline,
+)
 
 from analyzer import BaseAnalyzer
 from settings import Settings
@@ -93,21 +99,21 @@ class AudioAnalyzer(BaseAnalyzer):
         sentence_start = None
         last_end = 0
         SILENCE_THRESHOLD_MS = 500  # Minimum pause to consider as sentence boundary
-        
+
         for chunk in chunks:
             text = chunk["text"].strip()
             start = chunk["timestamp"][0] * 1000  # Convert to milliseconds
             end = chunk["timestamp"][1] * 1000 if chunk["timestamp"][1] else start + 1000  # Estimate end
-            
+
             # Detect sentence boundaries using punctuation and silence gaps
             if current_sentence:
                 # Check for pause duration between sentences
                 silence_gap = start - last_end
-                
+
                 # Check for ending punctuation in previous word
                 ends_with_punctuation = any(current_sentence[-1].endswith(p) 
                                           for p in [".", "?", "!", "。", "？", "！"])
-                
+
                 if ends_with_punctuation or silence_gap > SILENCE_THRESHOLD_MS:
                     sentences.append({
                         "text": " ".join(current_sentence),
@@ -119,7 +125,7 @@ class AudioAnalyzer(BaseAnalyzer):
 
             if not current_sentence:
                 sentence_start = start
-                
+
             current_sentence.append(text)
             last_end = end
 
@@ -130,7 +136,7 @@ class AudioAnalyzer(BaseAnalyzer):
                 "start": sentence_start,
                 "end": last_end
             })
-            
+
         return sentences
 
     def transcribe(self):
@@ -149,7 +155,7 @@ class AudioAnalyzer(BaseAnalyzer):
             generate_kwargs={
                 "language": "zh",
                 "task": "transcribe",  # Transcribe only, no translation
-                # "task": "transcribe",
+                # "task": "translate",
                 "forced_decoder_ids": None,
                 "return_timestamps": "word",  # Get word-level timestamps
                 "use_cache": True,
@@ -161,32 +167,32 @@ class AudioAnalyzer(BaseAnalyzer):
         translator = Translator()
         chinese_texts = [s["text"] for s in sentences]
         english_texts = translator.translate_batch(chinese_texts)
-        
+
         for s, en_text in zip(sentences, english_texts):
             s["english"] = en_text.strip()
-        
+
         return sentences
 
     def run(self):
         """Run full audio processing pipeline"""
         # Process through pipeline
         result = self.transcribe()
-        
+
         # Load audio file to get duration
         if not Settings.audio_file.exists():
             raise FileNotFoundError(f"Audio file not found: {Settings.audio_file}")
         audio, _ = librosa.load(str(Settings.audio_file), sr=16000, mono=True)
-        
+
         # Create sentence structure
         chunks = result["chunks"] if "chunks" in result else [{
             "text": result["text"], 
             "timestamp": (0.0, len(audio)/16000)
         }]
         sentences = self._group_into_sentences(chunks)
-        
+
         # Perform translation
         translated_sentences = self.translate(sentences)
-        
+
         # Build final results
         json_results = [{
             "original": s["text"],
