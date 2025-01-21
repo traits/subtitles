@@ -158,17 +158,13 @@ class AudioAnalyzer(BaseAnalyzer):
 
     def run(self):
         """Run full audio processing pipeline"""
-
-        # Process chunks and group into sentences
-        chunks = result["chunks"] if "chunks" in result else [{
-            "text": result["text"], 
-            "timestamp": (0.0, len(audio)/16000)  # Handle full audio duration
-        }]
-
-        sentences = self._group_into_sentences(chunks)
-
         # Process through pipeline
         result = self.transcribe()
+        
+        # Load audio file to get duration
+        if not Settings.audio_file.exists():
+            raise FileNotFoundError(f"Audio file not found: {Settings.audio_file}")
+        audio, _ = librosa.load(str(Settings.audio_file), sr=16000, mono=True)
         
         # Create sentence structure
         chunks = result["chunks"] if "chunks" in result else [{
