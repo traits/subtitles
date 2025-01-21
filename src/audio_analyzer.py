@@ -30,8 +30,14 @@ class Translator:
         
     def translate_batch(self, texts: list[str]) -> list[str]:
         """Translate a batch of Chinese texts to English"""
+        # Add translation instruction prompt
+        prompts = [
+            f"Translate this Chinese text to English: {text}" 
+            for text in texts
+        ]
+        
         inputs = self.tokenizer(
-            texts,
+            prompts,
             padding=True,
             truncation=True,
             return_tensors="pt"
@@ -184,7 +190,7 @@ class AudioAnalyzer(BaseAnalyzer):
         # Build final results
         json_results = [{
             "original": s["text"],
-            "english": s["english"],
+            "english": s["english"].replace("Translate this Chinese text to English: ", ""),
             "start_pts": int(s["start"]),
             "end_pts": int(s["end"])
         } for s in translated_sentences]
