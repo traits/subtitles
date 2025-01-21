@@ -38,7 +38,7 @@ class Translator:
         """Translate a batch of Chinese texts to English"""
         # Add translation instruction prompt
         prompts = [
-            f"Translate this Chinese text to English: {text}" 
+            f"Translate this Chinese text to English. Respond with only the English translation and nothing else: {text}" 
             for text in texts
         ]
         
@@ -51,7 +51,11 @@ class Translator:
         
         outputs = self.model.generate(
             **inputs,
-            max_new_tokens=500
+            max_new_tokens=100,
+            temperature=0.0,  # More deterministic output
+            eos_token_id=self.tokenizer.convert_tokens_to_ids(["<|endoftext|>"])[0],
+            pad_token_id=self.tokenizer.eos_token_id,
+            do_sample=False  # Disable random sampling
         )
         
         return self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
