@@ -24,7 +24,8 @@ class Translator:
         )
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_id,
-            trust_remote_code=True
+            trust_remote_code=True,
+            padding_side='left'  # Required for proper generation with decoder-only models
         )
         
     def translate_batch(self, texts: list[str]) -> list[str]:
