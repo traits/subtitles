@@ -94,8 +94,11 @@ class PostProcessor:
             for i, v in enumerate(subtitle_data):
                 if i < last_i:
                     if (text := v.get("english")) and text != last_english:
-                        start_time = self._millisecs_to_srt_time(v["pts"])
-                        end_time = self._millisecs_to_srt_time(subtitle_data[i + 1]["pts"])
+                        # Handle both OCR (pts) and audio (start_pts/end_pts) formats
+                        start_time = self._millisecs_to_srt_time(v.get("start_pts", v["pts"]))
+                        end_time = self._millisecs_to_srt_time(
+                            subtitle_data[i + 1].get("start_pts", subtitle_data[i + 1]["pts"])
+                        )
 
                         f.write(f"{subtitle_index}\n")
                         f.write(f"{start_time} --> {end_time}\n")
