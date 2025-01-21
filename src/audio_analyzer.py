@@ -3,7 +3,7 @@ import json
 
 import librosa
 import torch
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline, AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline, AutoModelForCausalLM, AutoTokenizer
 
 from analyzer import BaseAnalyzer
 from settings import Settings
@@ -16,12 +16,16 @@ class Translator:
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
         
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+        self.model = AutoModelForCausalLM.from_pretrained(
             model_id,
             torch_dtype=self.torch_dtype,
-            device_map=self.device
+            device_map=self.device,
+            trust_remote_code=True
         )
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            model_id,
+            trust_remote_code=True
+        )
         
     def translate_batch(self, texts: list[str]) -> list[str]:
         """Translate a batch of Chinese texts to English"""
