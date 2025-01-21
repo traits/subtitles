@@ -15,10 +15,11 @@ from analyzer import BaseAnalyzer
 from settings import Settings
 
 
-class Translator:
+class Translator(BaseAnalyzer):
     """Specialized translator for converting Chinese text to English"""
     
     def __init__(self, model_id="Qwen/Qwen2-7B-Instruct"):
+        super().__init__()
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
         
@@ -38,7 +39,7 @@ class Translator:
         """Translate a batch of Chinese texts to English"""
         # Add translation instruction prompt
         prompts = [
-            f"Translate this Chinese text to English. Respond with only the English translation and nothing else: {text}" 
+            self.prompts["audio_translation"].format(text=text)
             for text in texts
         ]
         
