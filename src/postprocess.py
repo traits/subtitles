@@ -95,9 +95,11 @@ class PostProcessor:
                 if i < last_i:
                     if (text := v.get("english")) and text != last_english:
                         # Handle both OCR (pts) and audio (start_pts/end_pts) formats
-                        start_time = self._millisecs_to_srt_time(v.get("start_pts", v["pts"]))
+                        # Handle both OCR (pts) and audio (start_pts/end_pts) formats
+                        start_time = self._millisecs_to_srt_time(v.get("start_pts", v.get("pts")))
+                        next_entry = subtitle_data[i + 1]
                         end_time = self._millisecs_to_srt_time(
-                            subtitle_data[i + 1].get("start_pts", subtitle_data[i + 1]["pts"])
+                            next_entry.get("start_pts", next_entry.get("pts"))
                         )
 
                         f.write(f"{subtitle_index}\n")
@@ -144,9 +146,11 @@ class PostProcessor:
                 if i < last_i:
                     if text := v.get("english"):
                         # Handle both OCR (pts) and audio (start_pts) formats
-                        start_time = self._millisecs_to_srt_time(v.get("start_pts", v["pts"]))
+                        # Handle both OCR (pts) and audio (start_pts) formats
+                        start_time = self._millisecs_to_srt_time(v.get("start_pts", v.get("pts")))
+                        next_entry = subtitle_data[i + 1]
                         end_time = self._millisecs_to_srt_time(
-                            subtitle_data[i + 1].get("start_pts", subtitle_data[i + 1]["pts"])
+                            next_entry.get("start_pts", next_entry.get("pts"))
                         )
 
                         f.write(f"{subtitle_index}\n")
