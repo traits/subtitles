@@ -44,6 +44,52 @@ class AudioAnalyzer(BaseAnalyzer):
             generate_kwargs={"max_length": 448, "return_timestamps": True},  # Whisper's max token length
         )
 
+    def _group_into_sentences(self, chunks):
+        sentences = []
+        current_sentence = []
+        sentence_start = None
+        last_end = 0
+        SILENCE_THRESHOLD_MS = 500  # Minimum pause to consider as sentence boundary
+        
+        for chunk in chunks:
+            text = chunk["text"].strip()
+            start = chunk["timestamp"][0] * 1000  # Convert to milliseconds
+            end = chunk["timestamp"][1] * 1000 if chunk["timestamp"][1] else start + 1000  # Estimate end
+            
+            # Detect sentence boundaries using punctuation and silence gaps
+            if current_sentence:
+                # Check for pause duration between sentences
+                silence_gap = start - last_end
+                
+                # Check for ending punctuation in previous word
+                ends_with_punctuation = any(current_sentence[-1].endswith(p) 
+                                          for p in [".", "?", "!", "。", "？", "！"])
+                
+                if ends_with_punctuation or silence_gap > SILENCE_THRESHOLD_MS:
+                    sentences.append({
+                        "text": " ".join(current_sentence),
+                        "start": sentence_start,
+                        "end": last_end
+                    })
+                    current_sentence = []
+                    sentence_start = None
+
+            if not current_sentence:
+                sentence_start = start
+                
+            current_sentence.append(text)
+            last_end = end
+
+        # Add the final sentence if any remains
+        if current_sentence:
+            sentences.append({
+                "text": " ".join(current_sentence),
+                "start": sentence_start,
+                "end": last_end
+            })
+            
+        return sentences
+
     def run(self):
         """Run audio analysis on the media file from Settings."""
         if not Settings.audio_file.exists():
@@ -70,13 +116,20 @@ class AudioAnalyzer(BaseAnalyzer):
         # Create structured JSON results
         json_results = []
 
-        # Process chunks and their timestamps
-        chunks = result["chunks"] if "chunks" in result else [{"text": result["text"], "timestamp": (0.0, None)}]
+        # Process chunks and group into sentences
+        chunks = result["chunks"] if "chunks" in result else [{
+            "text": result["text"], 
+            "timestamp": (0.0, len(audio)/16000)  # Handle full audio duration
+        }]
 
-        for chunk in chunks:
-            ts = chunk["timestamp"][0]
-            start_time = 1000 * round(ts) if ts is not None else 0
-            json_results.append({"english": chunk["text"].strip(), "pts": start_time})  # Translated text  # Start timestamp
+        sentences = self._group_into_sentences(chunks)
+
+        for sentence in sentences:
+            json_results.append({
+                "english": sentence["text"],
+                "start_pts": int(sentence["start"]),
+                "end_pts": int(sentence["end"])
+            })
 
         # Save results as JSON to output directory
         import json
