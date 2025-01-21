@@ -169,7 +169,8 @@ class AudioAnalyzer(BaseAnalyzer):
         english_texts = translator.translate_batch(chinese_texts)
 
         for s, en_text in zip(sentences, english_texts):
-            s["english"] = en_text.strip()
+            # Extract only the English part after the translation prompt
+            s["english"] = en_text.strip().split("\n\n")[-1].split(": ")[-1]
 
         return sentences
 
@@ -196,7 +197,7 @@ class AudioAnalyzer(BaseAnalyzer):
         # Build final results
         json_results = [{
             "original": s["text"],
-            "english": s["english"].replace("Translate this Chinese text to English: ", ""),
+            "english": s["english"],
             "start_pts": int(s["start"]),
             "end_pts": int(s["end"])
         } for s in translated_sentences]
