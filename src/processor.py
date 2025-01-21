@@ -21,5 +21,5 @@ class Processor:
         audio_analyzer.run()
 
         # Process combined subtitles
-        # postprocessor = PostProcessor()
-        # postprocessor.run(ProcessType.BOTH)  # Changed from AUDIO to BOTH
+        postprocessor = PostProcessor()
+        postprocessor.run(ProcessType.BOTH)  # Changed from AUDIO to BOTH
