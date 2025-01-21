@@ -49,17 +49,6 @@ class AudioAnalyzer(BaseAnalyzer):
         if not Settings.audio_file.exists():
             raise FileNotFoundError(f"Audio file not found: {Settings.audio_file}")
 
-        # from pyannote.audio import Pipeline
-
-        # pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization")
-        # pipeline.to(torch.device("cuda"))
-        # dz = pipeline(str(Settings.audio_file))
-
-        # with open(Settings.out_diarization, "w") as text_file:
-        #     text_file.write(str(dz))
-
-        # return
-
         # Load audio file and get sampling rate
         audio, sampling_rate = librosa.load(
             str(Settings.audio_file), sr=16000, mono=True  # Whisper expects 16kHz  # Force single channel
@@ -68,13 +57,14 @@ class AudioAnalyzer(BaseAnalyzer):
         # Pass raw audio directly to pipeline
         result = self.pipe(
             audio,
-            generate_kwargs={
+            generate_kwargs={  # arguments for model (whisper)
                 "language": "zh",
                 "task": "translate",
+                # "task": "transcribe",
                 "forced_decoder_ids": None,
                 "return_timestamps": "word",  # Get word-level timestamps
-                "use_cache": True
-            }
+                "use_cache": True,
+            },
         )
 
         # Create structured JSON results
