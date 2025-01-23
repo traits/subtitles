@@ -1,32 +1,29 @@
 param (
-    [string]$file
+    [string]$venv_dir = "../.venv"
 )
-
-if ( -not $file ) {
-    $file = Join-Path $PSScriptRoot "site.txt"
-} 
 
 $ErrorActionPreference = "Stop"
 Push-Location $PSScriptRoot
 
-$VENV_DIR = "../.venv"
-$VENV_SCRIPT_DIR = "$VENV_DIR/Scripts"
+$VENV_SCRIPT_DIR = "$venv_dir/Scripts"
 $PY_VERSION = "3.12"
-$REQFILES_DIR = $PSScriptRoot
 
-py -$PY_VERSION -m venv $VENV_DIR
+# Create virtual environment
+py -$PY_VERSION -m venv $venv_dir
 
+# Activate and install with UV
 Push-Location
 Set-Location $VENV_SCRIPT_DIR
 .\Activate.ps1
-Set-Location $REQFILES_DIR
 
-Write-Host "Starting $($MyInvocation.MyCommand.Name) $file"
+# Install UV if not present
+if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    pip install uv
+}
 
-py -m pip install -r $file
-Set-Location $VENV_SCRIPT_DIR
+# Install project dependencies
+uv pip install .
+
+Write-Host "Virtual environment setup complete"
 deactivate
-
-Write-Host "Script finished."
-
 Pop-Location
