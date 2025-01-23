@@ -17,12 +17,12 @@ from settings import Settings
 
 class Translator(BaseAnalyzer):
     """Specialized translator for converting Chinese text to English"""
-    
-    def __init__(self, model_id="Qwen/Qwen2-7B-Instruct"):
+
+    def __init__(self, model_id="Qwen/Qwen2.5-7B-Instruct"):
         super().__init__()
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-        
+
         self.model = AutoModelForCausalLM.from_pretrained(
             model_id,
             torch_dtype=self.torch_dtype,
@@ -34,22 +34,22 @@ class Translator(BaseAnalyzer):
             trust_remote_code=True,
             padding_side='left'  # Required for proper generation with decoder-only models
         )
-        
-    def translate_batch(self, texts: list[str]) -> list[str]:
+
+    def run(self, texts: list[str]) -> list[str]:
         """Translate a batch of Chinese texts to English"""
         # Add translation instruction prompt
         prompts = [
             self.prompts["audio_translation"].format(text=text)
             for text in texts
         ]
-        
+
         inputs = self.tokenizer(
             prompts,
             padding=True,
             truncation=True,
             return_tensors="pt"
         ).to(self.device)
-        
+
         outputs = self.model.generate(
             **inputs,
             max_new_tokens=100,
@@ -58,7 +58,7 @@ class Translator(BaseAnalyzer):
             pad_token_id=self.tokenizer.eos_token_id,
             do_sample=False  # Disable random sampling
         )
-        
+
         return self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
 
 
@@ -171,7 +171,7 @@ class AudioAnalyzer(BaseAnalyzer):
         """Translate Chinese sentences to English using specialist model"""
         translator = Translator()
         chinese_texts = [s["text"] for s in sentences]
-        english_texts = translator.translate_batch(chinese_texts)
+        english_texts = translator.run(chinese_texts)
 
         for s, en_text in zip(sentences, english_texts):
             # Extract only the English part after the translation prompt

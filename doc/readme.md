@@ -16,6 +16,7 @@ ffmpeg -i .\AiO=ep19.mkv -vn -acodec flac AiO-ep19.flac
 
 ## Audio
   - [Open ASR Leaderboard](https://huggingface.co/spaces/hf-audio/open_asr_leaderboard)
+  - [Qwen](https://qwen.readthedocs.io/en/latest/getting_started/concepts.html)
 
 ### Whisper
   - [GitHub](https://github.com/openai/whisper)
@@ -30,6 +31,11 @@ ffmpeg -i .\AiO=ep19.mkv -vn -acodec flac AiO-ep19.flac
   - [kind of...](https://deepinfra.com/openai/whisper-large/api?example=openai-speech-http)
   - [DecodingOptions](https://github.com/openai/whisper/blob/517a43ecd132a2089d85f4ebc044728a71d49f6e/whisper/decoding.py#L81)
   - [HF pipeline](https://huggingface.co/docs/transformers/main_classes/pipelines)
+
+### Translation
+
+- [Qwen2.5-7B-Instruct ](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
+- 
 
 ### Segmentation
   - [Audio Segmentation into Sentence](https://github.com/openai/whisper/discussions/1243)
