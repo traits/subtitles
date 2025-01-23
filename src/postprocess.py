@@ -7,6 +7,7 @@ from settings import Settings
 
 class ProcessType(IntFlag):
     """Type of processing being performed"""
+
     NONE = 0
     OCR = 1
     AUDIO = 2
@@ -14,7 +15,6 @@ class ProcessType(IntFlag):
 
 
 class PostProcessor:
-
     def __init__(self):
         # Add stream-specific output files
         basename = Settings.media_base_name
@@ -81,7 +81,7 @@ class PostProcessor:
 
     def _write_subtitle_file(self, file_key: str, subtitle_data: list):
         """Helper method to write subtitle data to a file.
-        
+
         Args:
             file_key: Key in self.sub_files dictionary for the output file
             subtitle_data: List of subtitle entries to write
@@ -98,9 +98,7 @@ class PostProcessor:
                         # Handle both OCR (pts) and audio (start_pts/end_pts) formats
                         start_time = self._millisecs_to_srt_time(v.get("start_pts", v.get("pts")))
                         next_entry = subtitle_data[i + 1]
-                        end_time = self._millisecs_to_srt_time(
-                            next_entry.get("start_pts", next_entry.get("pts"))
-                        )
+                        end_time = self._millisecs_to_srt_time(next_entry.get("start_pts", next_entry.get("pts")))
 
                         f.write(f"{subtitle_index}\n")
                         f.write(f"{start_time} --> {end_time}\n")
@@ -133,7 +131,7 @@ class PostProcessor:
 
         def write_subtitle_stream(f, stream_type: str, subtitle_data: list, color_code: str):
             """Nested function to write a subtitle stream.
-            
+
             Args:
                 f: File handle to write to
                 stream_type: Type of stream (OCR or AUDIO)
@@ -149,13 +147,11 @@ class PostProcessor:
                         # Handle both OCR (pts) and audio (start_pts) formats
                         start_time = self._millisecs_to_srt_time(v.get("start_pts", v.get("pts")))
                         next_entry = subtitle_data[i + 1]
-                        end_time = self._millisecs_to_srt_time(
-                            next_entry.get("start_pts", next_entry.get("pts"))
-                        )
+                        end_time = self._millisecs_to_srt_time(next_entry.get("start_pts", next_entry.get("pts")))
 
                         f.write(f"{subtitle_index}\n")
                         f.write(f"{start_time} --> {end_time}\n")
-                        f.write(f"<font color=\"{color_code}\">[{stream_type}] {text}</font>\n\n")
+                        f.write(f'<font color="{color_code}">[{stream_type}] {text}</font>\n\n')
                         subtitle_index += 1
 
         # Load OCR data

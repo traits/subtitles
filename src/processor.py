@@ -8,7 +8,6 @@ from settings import Settings
 
 
 class Processor:
-
     def __init__(self):
         Settings.initialize_dirs()
 

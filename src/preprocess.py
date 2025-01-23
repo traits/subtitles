@@ -46,7 +46,6 @@ def print_loop_state_modulo(i, loop_size, occ):
 
 
 class VideoPreprocessor:
-
     def run(self):
         self.extract_roi_images(5)
 

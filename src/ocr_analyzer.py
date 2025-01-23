@@ -10,7 +10,6 @@ from settings import Settings
 
 
 class OcrAnalyzer(BaseAnalyzer):
-
     def __init__(self, model_id="Qwen/Qwen2-VL-7B-Instruct"):
         """Initialize the OCR analyzer with Qwen model.
 
@@ -83,7 +82,9 @@ class OcrAnalyzer(BaseAnalyzer):
             # Inference: Generation of the output
             generated_ids = model.generate(**inputs, max_new_tokens=5000)
             generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
-            output_text = processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+            output_text = processor.batch_decode(
+                generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+            )
 
             # print(f"  {output_text[0]=}")
             cleaned_text = output_text[0].strip("`").replace("json", "").strip()

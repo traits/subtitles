@@ -35,17 +35,9 @@ class Translator(BaseAnalyzer):
     def run(self, texts: list[str]) -> list[str]:
         """Translate a batch of Chinese texts to English"""
         # Add translation instruction prompt
-        prompts = [
-            self.prompts["audio_translation"].format(text=text)
-            for text in texts
-        ]
+        prompts = [self.prompts["audio_translation"].format(text=text) for text in texts]
 
-        inputs = self.tokenizer(
-            prompts,
-            padding=True,
-            truncation=True,
-            return_tensors="pt"
-        ).to(self.device)
+        inputs = self.tokenizer(prompts, padding=True, truncation=True, return_tensors="pt").to(self.device)
 
         outputs = self.model.generate(
             **inputs,
@@ -53,7 +45,7 @@ class Translator(BaseAnalyzer):
             temperature=0.0,  # More deterministic output
             eos_token_id=self.tokenizer.convert_tokens_to_ids(["<|endoftext|>"])[0],
             pad_token_id=self.tokenizer.eos_token_id,
-            do_sample=False  # Disable random sampling
+            do_sample=False,  # Disable random sampling
         )
 
         return self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
@@ -62,7 +54,7 @@ class Translator(BaseAnalyzer):
 class AudioAnalyzer(BaseAnalyzer):
     def __init__(self, model_id="openai/whisper-large-v3"):
         """Initialize the audio analyzer with Whisper model.
-        
+
         Args:
             model_id: Model identifier for Whisper
         """
@@ -72,10 +64,7 @@ class AudioAnalyzer(BaseAnalyzer):
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
         self.model = AutoModelForSpeechSeq2Seq.from_pretrained(
-            model_id, 
-            torch_dtype=self.torch_dtype, 
-            low_cpu_mem_usage=True, 
-            use_safetensors=True
+            model_id, torch_dtype=self.torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
         )
         self.model.to(self.device)
 
@@ -113,15 +102,10 @@ class AudioAnalyzer(BaseAnalyzer):
                 silence_gap = start - last_end
 
                 # Check for ending punctuation in previous word
-                ends_with_punctuation = any(current_sentence[-1].endswith(p) 
-                                          for p in [".", "?", "!", "。", "？", "！"])
+                ends_with_punctuation = any(current_sentence[-1].endswith(p) for p in [".", "?", "!", "。", "？", "！"])
 
                 if ends_with_punctuation or silence_gap > SILENCE_THRESHOLD_MS:
-                    sentences.append({
-                        "text": " ".join(current_sentence),
-                        "start": sentence_start,
-                        "end": last_end
-                    })
+                    sentences.append({"text": " ".join(current_sentence), "start": sentence_start, "end": last_end})
                     current_sentence = []
                     sentence_start = None
 
@@ -133,11 +117,7 @@ class AudioAnalyzer(BaseAnalyzer):
 
         # Add the final sentence if any remains
         if current_sentence:
-            sentences.append({
-                "text": " ".join(current_sentence),
-                "start": sentence_start,
-                "end": last_end
-            })
+            sentences.append({"text": " ".join(current_sentence), "start": sentence_start, "end": last_end})
 
         return sentences
 
@@ -148,7 +128,9 @@ class AudioAnalyzer(BaseAnalyzer):
 
         # Load audio file and get sampling rate
         audio, sampling_rate = librosa.load(
-            str(Settings.audio_file), sr=16000, mono=True  # Whisper expects 16kHz  # Force single channel
+            str(Settings.audio_file),
+            sr=16000,
+            mono=True,  # Whisper expects 16kHz  # Force single channel
         )
 
         # Pass raw audio directly to pipeline
@@ -187,22 +169,21 @@ class AudioAnalyzer(BaseAnalyzer):
         audio, _ = librosa.load(str(Settings.audio_file), sr=16000, mono=True)
 
         # Create sentence structure
-        chunks = result["chunks"] if "chunks" in result else [{
-            "text": result["text"], 
-            "timestamp": (0.0, len(audio)/16000)
-        }]
+        chunks = (
+            result["chunks"]
+            if "chunks" in result
+            else [{"text": result["text"], "timestamp": (0.0, len(audio) / 16000)}]
+        )
         sentences = self._group_into_sentences(chunks)
 
         # Perform translation
         translated_sentences = self.translate(sentences)
 
         # Build final results
-        json_results = [{
-            "original": s["text"],
-            "english": s["english"],
-            "start_pts": int(s["start"]),
-            "end_pts": int(s["end"])
-        } for s in translated_sentences]
+        json_results = [
+            {"original": s["text"], "english": s["english"], "start_pts": int(s["start"]), "end_pts": int(s["end"])}
+            for s in translated_sentences
+        ]
 
         # Save results as JSON to output directory
         with open(Settings.result_audio, "w", encoding="utf-8") as f:
