@@ -15,8 +15,8 @@ dependencies = [
     "opencv-python>=4.11.0.86"
  ]
 
- [tool.uv.sources]
- pytorch = { url = "https://download.pytorch.org/whl/cu124" }
+[tool.uv.sources]
+pytorch = { url = "https://download.pytorch.org/whl/cu124" }
 
 [project.optional-dependencies]
 dev = [
@@ -35,6 +35,6 @@ resolution = "lowest-direct"
 python = "3.12"
 linker = "clone"
 
- [build-system]
- requires = ["uv>=0.1.0"]
- build-backend = "uv"
+[build-system]
+requires = ["uv>=0.1.0"]
+build-backend = "uv"
