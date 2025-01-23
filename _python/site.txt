@@ -1,4 +1,3 @@
--r base.txt
 --extra-index-url https://download.pytorch.org/whl/cu124/
 torch 
 torchvision
@@ -14,9 +13,9 @@ librosa
 # spacy[cuda12x]
 
 # deepseek_vl @ git+https://github.com/deepseek-ai/DeepSeek-VL2
-#flash-attn --global-option="--no-build-isolation"
-#packaging
-#ninja
+# flash-attn --global-option="--no-build-isolation"
+# packaging
+# ninja
 
 # thefuzz
 
