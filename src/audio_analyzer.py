@@ -24,15 +24,12 @@ class Translator(BaseAnalyzer):
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
         self.model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            torch_dtype=self.torch_dtype,
-            device_map=self.device,
-            trust_remote_code=True
+            model_id, torch_dtype=self.torch_dtype, device_map=self.device, trust_remote_code=True
         )
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_id,
             trust_remote_code=True,
-            padding_side='left'  # Required for proper generation with decoder-only models
+            padding_side="left",  # Required for proper generation with decoder-only models
         )
 
     def run(self, texts: list[str]) -> list[str]:
@@ -208,7 +205,6 @@ class AudioAnalyzer(BaseAnalyzer):
         } for s in translated_sentences]
 
         # Save results as JSON to output directory
-        import json
         with open(Settings.result_audio, "w", encoding="utf-8") as f:
             json.dump(json_results, f, ensure_ascii=False, indent=2)
 

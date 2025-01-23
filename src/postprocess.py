@@ -26,7 +26,7 @@ class PostProcessor:
 
     def run(self, process_type: ProcessType = ProcessType.OCR):
         """Run subtitle file generation for the specified processing type.
-        
+
         Args:
             process_type: Type of processing to generate subtitles for (OCR, AUDIO, or BOTH)
         """
