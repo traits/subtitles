@@ -5,3 +5,4 @@ __pycache__
 /.vscode
 /_output
 /data/AiO*
+*.egg-info
