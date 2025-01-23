@@ -30,11 +30,10 @@ dev = [
     # "requests>=2.32.3"
 ]
 
- [tool.uv]
- pip-version = "24.0"
- resolution = "lowest-direct"
- python = "3.12"
- linker = "clone"
+[tool.uv]
+resolution = "lowest-direct"
+python = "3.12"
+linker = "clone"
 
  [build-system]
  requires = ["uv>=0.1.0"]
