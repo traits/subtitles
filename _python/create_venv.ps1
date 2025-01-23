@@ -1,32 +1,21 @@
-param (
-    [string]$file
-)
-
-if ( -not $file ) {
-    $file = Join-Path $PSScriptRoot "site.txt"
-} 
+param()
 
 $ErrorActionPreference = "Stop"
 Push-Location $PSScriptRoot
 
 $VENV_DIR = "../.venv"
-$VENV_SCRIPT_DIR = "$VENV_DIR/Scripts"
-$PY_VERSION = "3.12"
-$REQFILES_DIR = $PSScriptRoot
+$VENV_PYTHON = Join-Path $VENV_DIR "Scripts/python.exe"
+$PYPROJECT = Join-Path $PSScriptRoot "pyproject.toml"
 
-py -$PY_VERSION -m venv $VENV_DIR
+# Create environment with locked Python version
+uv venv --python 3.12 $VENV_DIR
 
-Push-Location
-Set-Location $VENV_SCRIPT_DIR
-.\Activate.ps1
-Set-Location $REQFILES_DIR
+# Install from pyproject.toml using project metadata
+uv pip install `
+    --python $VENV_PYTHON `
+    --project $PYPROJECT `
+    --resolution=lowest-direct `
+    --strict
 
-Write-Host "Starting $($MyInvocation.MyCommand.Name) $file"
-
-py -m pip install -r $file
-Set-Location $VENV_SCRIPT_DIR
-deactivate
-
-Write-Host "Script finished."
-
+Write-Host "Environment built from pyproject.toml"
 Pop-Location
