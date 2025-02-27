@@ -1,6 +1,8 @@
 import json
+import torch
 from enum import IntFlag
 from pathlib import Path
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from settings import Settings
 
@@ -23,6 +25,26 @@ class PostProcessor:
             "audio": Settings.out_dir / f"{basename}_audio.srt",
             "combined": Settings.out_dir / f"{basename}.srt",
         }
+
+        # Add Qwen model for OCR deduplication
+        self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        
+        self.dedup_model = AutoModelForCausalLM.from_pretrained(
+            "Qwen/Qwen2.5-7B-Instruct",
+            torch_dtype=self.torch_dtype,
+            device_map=self.device,
+            trust_remote_code=True
+        )
+        self.dedup_tokenizer = AutoTokenizer.from_pretrained(
+            "Qwen/Qwen2.5-7B-Instruct",
+            trust_remote_code=True,
+            padding_side="left"
+        )
+        
+        # Load prompts
+        with open(Settings.git_root/"data"/"prompts.json", encoding="utf8") as f:
+            self.prompts = json.load(f)
 
     def run(self, process_type: ProcessType = ProcessType.OCR):
         """Run subtitle file generation for the specified processing type.
@@ -108,9 +130,55 @@ class PostProcessor:
                         subtitle_index += 1
                         last_english = text
 
+    def _deduplicate_ocr_texts(self, ocr_info: list) -> list:
+        """Merge consecutive OCR entries with minor text variations."""
+        if not ocr_info:
+            return []
+
+        processed = []
+        previous = ocr_info[0]
+        
+        for current in ocr_info[1:]:
+            # Skip entries without translations
+            if not previous.get("english") or not current.get("english"):
+                processed.append(previous)
+                previous = current
+                continue
+
+            # Get model judgment
+            prompt = self.prompts["ocr_deduplication"].format(
+                text1=previous["english"],
+                text2=current["english"]
+            )
+            inputs = self.dedup_tokenizer(prompt, return_tensors="pt").to(self.device)
+            
+            outputs = self.dedup_model.generate(
+                **inputs,
+                max_new_tokens=100,
+                temperature=0.0,
+                eos_token_id=self.dedup_tokenizer.convert_tokens_to_ids(["<|endoftext|>"])[0],
+                pad_token_id=self.dedup_tokenizer.eos_token_id,
+                do_sample=False
+            )
+            
+            response = self.dedup_tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+            # Merge if response isn't "no" and contains valid text
+            if "no" not in response.lower() and len(response) > 0:
+                # Use latest timestamp from current entry
+                previous["english"] = response.split(":")[-1].strip()
+                previous["pts"] = current["pts"]
+            else:
+                processed.append(previous)
+                previous = current
+        
+        processed.append(previous)
+        return processed
+
     def writeOcrSubFile(self):
         """Create subtitle file from OCR analysis results in SRT format (timestamp based)."""
         info = self.mergeSubTitleInfo()
+        info = self._deduplicate_ocr_texts(info)  # Add deduplication step
         self._write_subtitle_file("ocr", info)
 
     def writeAudioSubFile(self):
