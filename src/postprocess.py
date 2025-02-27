@@ -36,8 +36,7 @@ class PostProcessor:
             torch_dtype=self.torch_dtype,
             device_map=self.device,
             trust_remote_code=True,
-            # attn_implementation="sdpa",  # Force SDPA
-            # use_sliding_window=False,  # Disable sliding window attention
+            sliding_window=-1,  # Disable sliding window attention
         )
         self.dedup_tokenizer = AutoTokenizer.from_pretrained(
             "Qwen/Qwen2.5-7B-Instruct",
@@ -105,53 +104,84 @@ class PostProcessor:
         return f"{hours:02}:{minutes:02}:{seconds:02},{ms:03}"
 
     def _write_subtitle_file(self, file_key: str, subtitle_data: list):
-        """Helper method to write subtitle data to a file.
+        """Helper method to write subtitle data to a file using buffered writes.
 
         Args:
             file_key: Key in self.sub_files dictionary for the output file
             subtitle_data: List of subtitle entries to write
         """
-        with open(self.sub_files[file_key], "w", encoding="utf8") as f:
-            subtitle_index = 1
-            last_english = ""
-            last_i = len(subtitle_data) - 1
+        buffer = []
+        subtitle_index = 1
+        last_english = ""
+        last_i = len(subtitle_data) - 1
 
-            for i, v in enumerate(subtitle_data):
-                if i < last_i:
-                    if (text := v.get("english")) and text != last_english:
-                        # Handle both OCR (pts) and audio (start_pts/end_pts) formats
-                        start_time = self._millisecs_to_srt_time(v.get("start_pts", v.get("pts")))
-                        next_entry = subtitle_data[i + 1]
-                        end_time = self._millisecs_to_srt_time(next_entry.get("start_pts", next_entry.get("pts")))
+        for i, v in enumerate(subtitle_data):
+            if i < last_i:
+                if (text := v.get("english")) and text != last_english:
+                    # Handle both OCR (pts) and audio (start_pts/end_pts) formats
+                    start_time = self._millisecs_to_srt_time(v.get("start_pts", v.get("pts")))
+                    next_entry = subtitle_data[i + 1]
+                    end_time = self._millisecs_to_srt_time(next_entry.get("start_pts", next_entry.get("pts")))
 
-                        f.write(f"{subtitle_index}\n")
-                        f.write(f"{start_time} --> {end_time}\n")
-                        f.write(f"{text}\n\n")
-                        subtitle_index += 1
-                        last_english = text
+                    buffer.append(f"{subtitle_index}\n")
+                    buffer.append(f"{start_time} --> {end_time}\n")
+                    buffer.append(f"{text}\n\n")
+                    subtitle_index += 1
+                    last_english = text
+
+                    # Write buffer in chunks
+                    if len(buffer) >= 100:  # Write every 100 subtitles
+                        with open(self.sub_files[file_key], "a", encoding="utf8") as f:
+                            f.writelines(buffer)
+                        buffer = []
+
+        # Write remaining buffer
+        if buffer:
+            with open(self.sub_files[file_key], "a", encoding="utf8") as f:
+                f.writelines(buffer)
 
     def _deduplicate_ocr_texts(self, ocr_info: list) -> list:
-        """Merge consecutive OCR entries with minor text variations."""
+        """Merge consecutive OCR entries with minor text variations using batch processing."""
         if not ocr_info:
             return []
 
         processed = []
-        previous = ocr_info[0]
+        batch_size = 8
+        pairs = []
+        indices = []
+        
+        # Create pairs of consecutive entries
+        for i in range(len(ocr_info) - 1):
+            current = ocr_info[i]
+            next_entry = ocr_info[i + 1]
+            
+            if current.get("english") and next_entry.get("english"):
+                pairs.append((current, next_entry))
+                indices.append(i)
 
-        # for i, v in enumerate(subtitle_data):
-        size = len(ocr_info[1:])
-        for i, current in enumerate(ocr_info[1:]):
-            print(f"{i + 1}/{size}")
-            # Skip entries without translations
-            if not previous.get("english") or not current.get("english"):
-                processed.append(previous)
-                previous = current
-                continue
+        # Process in batches
+        for batch_start in range(0, len(pairs), batch_size):
+            batch_end = min(batch_start + batch_size, len(pairs))
+            batch_pairs = pairs[batch_start:batch_end]
+            
+            # Prepare batch prompts
+            prompts = [
+                self.prompts["ocr_deduplication"].format(
+                    text1=pair[0]["english"],
+                    text2=pair[1]["english"]
+                )
+                for pair in batch_pairs
+            ]
+            
+            # Tokenize batch
+            inputs = self.dedup_tokenizer(
+                prompts,
+                padding=True,
+                truncation=True,
+                return_tensors="pt"
+            ).to(self.device)
 
-            # Get model judgment
-            prompt = self.prompts["ocr_deduplication"].format(text1=previous["english"], text2=current["english"])
-            inputs = self.dedup_tokenizer(prompt, return_tensors="pt").to(self.device)
-
+            # Generate responses
             outputs = self.dedup_model.generate(
                 **inputs,
                 max_new_tokens=100,
@@ -161,18 +191,27 @@ class PostProcessor:
                 do_sample=False,
             )
 
-            response = self.dedup_tokenizer.decode(outputs[0], skip_special_tokens=True)
+            # Process responses
+            responses = self.dedup_tokenizer.batch_decode(outputs, skip_special_tokens=True)
+            
+            for idx, response in zip(range(batch_start, batch_end), responses):
+                current = pairs[idx][0]
+                next_entry = pairs[idx][1]
+                
+                # Merge if response isn't "no" and contains valid text
+                if "no" not in response.lower() and len(response) > 0:
+                    # Use latest timestamp from current entry
+                    current["english"] = response.split(":")[-1].strip()
+                    current["pts"] = next_entry["pts"]
+                    processed.append(current)
+                else:
+                    processed.append(current)
+                    processed.append(next_entry)
 
-            # Merge if response isn't "no" and contains valid text
-            if "no" not in response.lower() and len(response) > 0:
-                # Use latest timestamp from current entry
-                previous["english"] = response.split(":")[-1].strip()
-                previous["pts"] = current["pts"]
-            else:
-                processed.append(previous)
-                previous = current
+        # Handle remaining entries
+        if len(processed) < len(ocr_info):
+            processed.extend(ocr_info[len(processed):])
 
-        processed.append(previous)
         return processed
 
     def writeOcrSubFile(self):
