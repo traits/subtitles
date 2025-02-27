@@ -36,11 +36,13 @@ class PostProcessor:
             torch_dtype=self.torch_dtype,
             device_map=self.device,
             trust_remote_code=True,
-            attn_implementation="sdpa",  # Force SDPA
-            sliding_window=-1  # Disable sliding window attention
+            # attn_implementation="sdpa",  # Force SDPA
+            # use_sliding_window=False,  # Disable sliding window attention
         )
         self.dedup_tokenizer = AutoTokenizer.from_pretrained(
-            "Qwen/Qwen2.5-7B-Instruct", trust_remote_code=True, padding_side="left"
+            "Qwen/Qwen2.5-7B-Instruct",
+            trust_remote_code=True,
+            padding_side="left",
         )
 
         # Load prompts
@@ -136,7 +138,10 @@ class PostProcessor:
         processed = []
         previous = ocr_info[0]
 
-        for current in ocr_info[1:]:
+        # for i, v in enumerate(subtitle_data):
+        size = len(ocr_info[1:])
+        for i, current in enumerate(ocr_info[1:]):
+            print(f"{i + 1}/{size}")
             # Skip entries without translations
             if not previous.get("english") or not current.get("english"):
                 processed.append(previous)
