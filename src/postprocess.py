@@ -146,15 +146,15 @@ class PostProcessor:
             return []
 
         processed = []
-        batch_size = 8
+        batch_size = 32
         pairs = []
         indices = []
-        
+
         # Create pairs of consecutive entries
         for i in range(len(ocr_info) - 1):
             current = ocr_info[i]
             next_entry = ocr_info[i + 1]
-            
+
             if current.get("english") and next_entry.get("english"):
                 pairs.append((current, next_entry))
                 indices.append(i)
@@ -163,23 +163,17 @@ class PostProcessor:
         for batch_start in range(0, len(pairs), batch_size):
             batch_end = min(batch_start + batch_size, len(pairs))
             batch_pairs = pairs[batch_start:batch_end]
-            
+
+            print(f"{batch_start}/{len(pairs)}")
+
             # Prepare batch prompts
             prompts = [
-                self.prompts["ocr_deduplication"].format(
-                    text1=pair[0]["english"],
-                    text2=pair[1]["english"]
-                )
+                self.prompts["ocr_deduplication"].format(text1=pair[0]["english"], text2=pair[1]["english"])
                 for pair in batch_pairs
             ]
-            
+
             # Tokenize batch
-            inputs = self.dedup_tokenizer(
-                prompts,
-                padding=True,
-                truncation=True,
-                return_tensors="pt"
-            ).to(self.device)
+            inputs = self.dedup_tokenizer(prompts, padding=True, truncation=True, return_tensors="pt").to(self.device)
 
             # Generate responses
             outputs = self.dedup_model.generate(
@@ -193,11 +187,11 @@ class PostProcessor:
 
             # Process responses
             responses = self.dedup_tokenizer.batch_decode(outputs, skip_special_tokens=True)
-            
+
             for idx, response in zip(range(batch_start, batch_end), responses):
                 current = pairs[idx][0]
                 next_entry = pairs[idx][1]
-                
+
                 # Merge if response isn't "no" and contains valid text
                 if "no" not in response.lower() and len(response) > 0:
                     # Use latest timestamp from current entry
@@ -210,7 +204,7 @@ class PostProcessor:
 
         # Handle remaining entries
         if len(processed) < len(ocr_info):
-            processed.extend(ocr_info[len(processed):])
+            processed.extend(ocr_info[len(processed) :])
 
         return processed
 
