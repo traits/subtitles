@@ -157,7 +157,7 @@ class VideoPreprocessor:
         for v in data:
             if v["type"] == "read":
                 key = str(v["out_pts"])
-                if read_stacks.get(key) == None:
+                if read_stacks.get(key) is None:
                     read_stacks[key] = deque()
                 read_stacks[key].append(v)
             elif v["type"] == "drop":
