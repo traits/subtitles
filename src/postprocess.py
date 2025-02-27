@@ -32,7 +32,12 @@ class PostProcessor:
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
         self.dedup_model = AutoModelForCausalLM.from_pretrained(
-            "Qwen/Qwen2.5-7B-Instruct", torch_dtype=self.torch_dtype, device_map=self.device, trust_remote_code=True
+            "Qwen/Qwen2.5-7B-Instruct",
+            torch_dtype=self.torch_dtype,
+            device_map=self.device,
+            trust_remote_code=True,
+            attn_implementation="sdpa",  # Force SDPA
+            sliding_window=-1  # Disable sliding window attention
         )
         self.dedup_tokenizer = AutoTokenizer.from_pretrained(
             "Qwen/Qwen2.5-7B-Instruct", trust_remote_code=True, padding_side="left"
