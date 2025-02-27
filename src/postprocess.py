@@ -60,7 +60,7 @@ class PostProcessor:
         result = []
         for si, fi in zip(sinfo, finfo):
             elem = si
-            if elem == None:
+            if elem is None:
                 elem = {}
 
             elem["pts"] = fi["in_pts"]
