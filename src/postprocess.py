@@ -54,8 +54,10 @@ class PostProcessor:
         ls = len(sinfo)
         lf = len(finfo)
         if ls != lf:
-            print(f"{ls=} {lf=}")
-            return []
+            raise ValueError(
+                f"Data length mismatch: OCR results ({ls} entries) "
+                f"don't match frame info ({lf} entries)"
+            )
 
         result = []
         for si, fi in zip(sinfo, finfo):
@@ -71,6 +73,7 @@ class PostProcessor:
 
     def _millisecs_to_srt_time(self, ms):
         """Convert milliseconds to SRT time format (HH:MM:SS,mmm)."""
+        ms = max(ms, 0)  # Prevent negative values
         hours = ms // 3_600_000
         ms %= 3_600_000
         minutes = ms // 60_000
@@ -94,7 +97,6 @@ class PostProcessor:
             for i, v in enumerate(subtitle_data):
                 if i < last_i:
                     if (text := v.get("english")) and text != last_english:
-                        # Handle both OCR (pts) and audio (start_pts/end_pts) formats
                         # Handle both OCR (pts) and audio (start_pts/end_pts) formats
                         start_time = self._millisecs_to_srt_time(v.get("start_pts", v.get("pts")))
                         next_entry = subtitle_data[i + 1]
@@ -143,7 +145,6 @@ class PostProcessor:
             for i, v in enumerate(subtitle_data):
                 if i < last_i:
                     if text := v.get("english"):
-                        # Handle both OCR (pts) and audio (start_pts) formats
                         # Handle both OCR (pts) and audio (start_pts) formats
                         start_time = self._millisecs_to_srt_time(v.get("start_pts", v.get("pts")))
                         next_entry = subtitle_data[i + 1]
