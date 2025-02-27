@@ -5,10 +5,17 @@ from typing import Optional
 
 
 class Settings:
-    media_base_name: str = "AiO-ep19"  # Default media file base name
+    @staticmethod
+    def _get_git_root() -> Path:
+        root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
+        if not root:
+            raise OSError(2, "file not found (no git root detected)")
+        s = root.decode("utf-8").strip()
+        return Path(s)
 
+    media_base_name: str = "AiO-ep19"  # Default media file base name
     # Initialize paths once when class is loaded
-    root: Path = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).decode("utf-8").strip())
+    root: Path = _get_git_root()
     data_dir: Path = root / "data"
     video_file: Path = data_dir / f"{media_base_name}.mkv"
     audio_file: Path = data_dir / f"{media_base_name}.flac"
@@ -31,10 +38,3 @@ class Settings:
         cls.out_dir.mkdir(parents=True, exist_ok=True)
         cls.out_frames.mkdir(parents=True, exist_ok=True)
         cls.out_rois.mkdir(parents=True, exist_ok=True)
-
-    def _get_git_root(self) -> Path:
-        root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
-        if not root:
-            raise OSError(2, "file not found (no git root detected)")
-        s = root.decode("utf-8").strip()
-        return Path(s)
