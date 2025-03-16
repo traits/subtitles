@@ -1,7 +1,30 @@
+import importlib
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+
+
+class Models:
+    # imports can be lists of imported attributes from transformer module
+
+    OCR = {
+        "Qwen20": {"id": "Qwen/Qwen2-VL-7B-Instruct", "imports": "Qwen2VLForConditionalGeneration"},
+        "Qwen25": {"id": "Qwen/Qwen2.5-VL-7B-Instruct", "imports": "Qwen2_5_VLForConditionalGeneration"},
+    }
+    AUDIO = {"Whisper": {"id": "openai/whisper-large-v3", "imports": "AutoModelForSpeechSeq2Seq"}}
+    TRANSLATOR = {"Qwen25": {"id": "Qwen/Qwen2.5-7B-Instruct", "imports": "AutoModelForCausalLM"}}
+
+    @staticmethod
+    def summon(model_dict: dict, name: str):
+        entry = model_dict[name]
+        module = importlib.import_module("transformers")
+        imports = entry["imports"]
+        if isinstance(imports, str):
+            imports = [imports]
+
+        imports = [getattr(module, i) for i in imports]
+        return imports, entry["id"]
 
 
 class Settings:

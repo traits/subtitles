@@ -4,30 +4,31 @@ from pathlib import Path
 import librosa
 import torch
 from transformers import (
-    AutoModelForCausalLM,
-    AutoModelForSpeechSeq2Seq,
     AutoProcessor,
     AutoTokenizer,
     pipeline,
 )
 
 from analyzer import BaseAnalyzer
-from settings import Settings
+from settings import Models, Settings
 
 
 class Translator(BaseAnalyzer):
     """Specialized translator for converting Chinese text to English"""
 
-    def __init__(self, model_id="Qwen/Qwen2.5-7B-Instruct"):
+    def __init__(self):
         super().__init__()
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_id, torch_dtype=self.torch_dtype, device_map=self.device, trust_remote_code=True
+        imports, self.model_id = Models.summon(Models.TRANSLATOR, "Qwen25")
+        self.model_object = imports[0]
+
+        self.model = self.model_object.from_pretrained(
+            self.model_id, torch_dtype=self.torch_dtype, device_map=self.device, trust_remote_code=True
         )
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_id,
+            self.model_id,
             trust_remote_code=True,
             padding_side="left",  # Required for proper generation with decoder-only models
         )
@@ -59,11 +60,13 @@ class AudioAnalyzer(BaseAnalyzer):
             model_id: Model identifier for Whisper
         """
         super().__init__()
-
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-        self.model = AutoModelForSpeechSeq2Seq.from_pretrained(
+        imports, self.model_id = Models.summon(Models.AUDIO, "Whisper")
+        self.model_object = imports[0]
+
+        self.model = self.model_object.from_pretrained(
             model_id, torch_dtype=self.torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
         )
         self.model.to(self.device)
