@@ -32,12 +32,12 @@ class OcrAnalyzer(BaseAnalyzer):
         model = self.model_object.from_pretrained(
             self.model_id,
             torch_dtype=torch.bfloat16,
-            #    attn_implementation="flash_attention_2",
+            # attn_implementation="flash_attention_2",
             device_map="auto",
         )
 
         # default processer
-        processor = AutoProcessor.from_pretrained(self.model_id, response_format={"type": "json_object"})
+        processor = AutoProcessor.from_pretrained(self.model_id, use_fast=True, response_format={"type": "json_object"})
 
         # # The default range for the number of visual tokens per image in the model is 4-16384. You can set min_pixels and max_pixels according to your needs, such as a token count range of 256-1280, to balance speed and memory usage.
         # min_pixels = 256 * 28 * 28
