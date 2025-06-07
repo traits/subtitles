@@ -51,7 +51,7 @@ class VideoPreprocessor:
 
     def get_video_dimensions(self):
         width = height = -1
-        vcap = cv2.VideoCapture(self.video_file.as_posix())
+        vcap = cv2.VideoCapture(Settings.video_file.as_posix())
         if vcap.isOpened():
             width = vcap.get(cv2.CAP_PROP_FRAME_WIDTH)  # float `width`
             height = vcap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float `height`
@@ -78,7 +78,7 @@ class VideoPreprocessor:
             "-loglevel",
             "debug",
             "-i",
-            self.video_file.as_posix(),
+            Settings.video_file.as_posix(),
             "-vf",
             f"fps={fps}",
             "-fps_mode",
@@ -95,12 +95,14 @@ class VideoPreprocessor:
             text=True,
         )
         ffmpeg_log = result.stderr
-        with open(self.log_file, "w") as f:
+        with open(Settings.log_file, "w") as f:
             f.write(ffmpeg_log)
 
     def convertFFMPEGLog(self) -> list:
         # Regular expression to match the desired log entries
-        log_pattern = re.compile(r"\[Parsed_fps_\d+ @ [0-9a-fA-F]+] (Read frame .*|Dropping frame .*|Writing frame .*)")
+        log_pattern = re.compile(
+            r"\[Parsed_fps_\d+ @ [x0-9a-fA-F]+] (Read frame .*|Dropping frame .*|Writing frame .*)", re.DOTALL
+        )
 
         # Regular expression to extract PTS values
         pts_pattern = re.compile(r"in pts (\d+), out pts (\d+)|with pts (\d+)")
@@ -112,7 +114,7 @@ class VideoPreprocessor:
         read_frame_counter = 0
 
         # Read the log file and extract matching lines
-        with open(self.log_file, "r") as f:
+        with open(Settings.log_file, "r") as f:
             for line in f:
                 match = log_pattern.match(line)
                 if match:
@@ -172,7 +174,7 @@ class VideoPreprocessor:
                 result.append(e)
 
         # Save the extracted entries as a JSON list
-        with open(self.frame_info_file, "w") as f:
+        with open(Settings.log_frame_info, "w") as f:
             json.dump(result, f, indent=2)
         return len(result)
 

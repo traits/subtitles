@@ -14,6 +14,9 @@ class Processor:
     def run(self):
         # Run both OCR and audio processing
 
+        # preprocessor = VideoPreprocessor()
+        # preprocessor.run()
+
         ocr_analyzer = OcrAnalyzer()
         ocr_analyzer.run()
 
