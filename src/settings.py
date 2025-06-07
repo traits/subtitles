@@ -11,10 +11,6 @@ class Models:
     OCR = {
         "Qwen20": {"id": "Qwen/Qwen2-VL-7B-Instruct", "imports": "Qwen2VLForConditionalGeneration"},
         "Qwen25": {"id": "Qwen/Qwen2.5-VL-7B-Instruct", "imports": "Qwen2_5_VLForConditionalGeneration"},
-        "Qwen25-omni": {
-            "id": "Qwen/Qwen2.5-Omni-7B",
-            "imports": ["Qwen2_5OmniForConditionalGeneration", "Qwen2_5OmniProcessor"],
-        },
     }
     AUDIO = {"Whisper": {"id": "openai/whisper-large-v3", "imports": "AutoModelForSpeechSeq2Seq"}}
     TRANSLATOR = {"Qwen25": {"id": "Qwen/Qwen2.5-7B-Instruct", "imports": "AutoModelForCausalLM"}}
