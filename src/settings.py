@@ -13,7 +13,10 @@ class Models:
         "Qwen25": {"id": "Qwen/Qwen2.5-VL-7B-Instruct", "imports": "Qwen2_5_VLForConditionalGeneration"},
     }
     AUDIO = {"Whisper": {"id": "openai/whisper-large-v3", "imports": "AutoModelForSpeechSeq2Seq"}}
-    TRANSLATOR = {"Qwen25": {"id": "Qwen/Qwen2.5-7B-Instruct", "imports": "AutoModelForCausalLM"}}
+    TRANSLATOR = {
+        "Qwen25": {"id": "Qwen/Qwen2.5-7B-Instruct", "imports": "AutoModelForCausalLM"},
+        "Qwen3": {"id": "Qwen/Qwen3-8B", "imports": "AutoModelForCausalLM"},
+    }
 
     @staticmethod
     def summon(model_dict: dict, name: str):

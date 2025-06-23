@@ -21,7 +21,7 @@ class Translator(BaseAnalyzer):
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-        imports, self.model_id = Models.summon(Models.TRANSLATOR, "Qwen25")
+        imports, self.model_id = Models.summon(Models.TRANSLATOR, "Qwen3")
         self.model_object = imports[0]
 
         self.model = self.model_object.from_pretrained(
