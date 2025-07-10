@@ -45,6 +45,6 @@
 
 ### Diarization
   - [Diarization](https://github.com/lablab-ai/Whisper-transcription_and_diarization-speaker-identification-)
-  - [Pyannote vs NeMo](https://lajavaness.medium.com/comparing-state-of-the-art-speaker-diarization-frameworks-pyannote-vs-nemo-31a191c6300)
+  - [Pyannote vs. NeMo](https://lajavaness.medium.com/comparing-state-of-the-art-speaker-diarization-frameworks-pyannote-vs-nemo-31a191c6300)
   - [Top Speaker Diarization Libraries and APIs in 2024](https://www.assemblyai.com/blog/top-speaker-diarization-libraries-and-apis/)
   
