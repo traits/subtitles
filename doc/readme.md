@@ -35,9 +35,8 @@
   - [HF pipeline](https://huggingface.co/docs/transformers/main_classes/pipelines)
 
 ### Translation
-
-- [Qwen2.5-7B-Instruct ](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
-- 
+  - [Qwen2.5-7B-Instruct ](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
+  
 
 ### Segmentation
   - [Audio Segmentation into Sentence](https://github.com/openai/whisper/discussions/1243)
