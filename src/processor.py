@@ -23,6 +23,6 @@ class Processor:
         audio_analyzer = AudioAnalyzer()
         audio_analyzer.run()
 
-        # # Process combined subtitles
-        postprocessor = PostProcessor()
-        postprocessor.run(ProcessType.AUDIO)
+        # Process subtitles
+        # postprocessor = PostProcessor()
+        # postprocessor.run(ProcessType.AUDIO)

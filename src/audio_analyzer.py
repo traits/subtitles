@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 
 import librosa
@@ -12,6 +13,8 @@ from transformers import (
 from analyzer import BaseAnalyzer
 from settings import Models, Settings
 
+logging.basicConfig(level=logging.INFO)
+
 
 class Translator(BaseAnalyzer):
     """Specialized translator for converting Chinese text to English"""
@@ -21,7 +24,7 @@ class Translator(BaseAnalyzer):
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-        imports, self.model_id = Models.summon(Models.TRANSLATOR, "Qwen3")
+        imports, self.model_id = Models.summon(Models.TRANSLATOR, "Qwen2.5")
         self.model_object = imports[0]
 
         self.model = self.model_object.from_pretrained(
@@ -37,8 +40,15 @@ class Translator(BaseAnalyzer):
         """Translate a batch of Chinese texts to English"""
         # Add translation instruction prompt
         prompts = [self.prompts["audio_translation"].format(text=text) for text in texts]
-
         inputs = self.tokenizer(prompts, padding=True, truncation=True, return_tensors="pt").to(self.device)
+        # messages = [{"role": "user", "content": prompt} for prompt in prompts]
+        # text = self.tokenizer.apply_chat_template(
+        #     messages,
+        #     tokenize=False,
+        #     add_generation_prompt=True,
+        #     enable_thinking=False,  # Switches between thinking and non-thinking modes. Default is True.
+        # )
+        # inputs = self.tokenizer(text, padding=True, truncation=True, return_tensors="pt").to(self.device)
 
         outputs = self.model.generate(
             **inputs,
@@ -163,8 +173,11 @@ class AudioAnalyzer(BaseAnalyzer):
 
     def run(self):
         """Run full audio processing pipeline"""
+        logger = logging.getLogger(__name__)
         # Process through pipeline
+        logger.info("Start transcription Audio (cn) -> Text (cn)")
         result = self.transcribe()
+        logger.info("Finished transcription")
 
         # Load audio file to get duration
         if not Settings.audio_file.exists():
@@ -180,8 +193,9 @@ class AudioAnalyzer(BaseAnalyzer):
         sentences = self._group_into_sentences(chunks)
 
         # Perform translation
+        logger.info("Start text translation cn -> en")
         translated_sentences = self.translate(sentences)
-
+        logger.info("Finished translation")
         # Build final results
         json_results = [
             {"original": s["text"], "english": s["english"], "start_pts": int(s["start"]), "end_pts": int(s["end"])}

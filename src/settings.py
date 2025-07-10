@@ -22,7 +22,7 @@ class Models:
     def summon(model_dict: dict, name: str):
         entry = model_dict[name]
         module = importlib.import_module("transformers")
-        imports = entry["imports"]
+        imports = entry.get("imports", [])
         if isinstance(imports, str):
             imports = [imports]
 
